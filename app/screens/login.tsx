@@ -26,7 +26,8 @@ import dentistImage from "../../assets/images/dentist.png";
 import logoImage from "../../assets/images/logo.png";
 
 const { width, height } = Dimensions.get("window");
-const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|live|uthh\.edu)\.(com|mx)$/;
+const EMAIL_REGEX =
+  /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|live|uthh\.edu)\.(com|mx)$/;
 const API_URL = "https://back-end-4803.onrender.com/api/users/loginMovil";
 
 export default function Login() {
@@ -34,8 +35,6 @@ export default function Login() {
   const auth = useContext(AuthContext);
   const theme = useContext(ThemeContext);
   const scrollViewRef = useRef<ScrollView>(null);
-  const emailInputRef = useRef<TextInput>(null);
-  const passwordInputRef = useRef<TextInput>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,18 +48,11 @@ export default function Login() {
     loadSavedEmail();
 
     const keyboardWillShow = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        setKeyboardVisible(true);
-        // Scroll hacia arriba cuando se abre el teclado
-        setTimeout(() => {
-          scrollViewRef.current?.scrollTo({ y: 100, animated: true });
-        }, 100);
-      }
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => setKeyboardVisible(true)
     );
-    
     const keyboardWillHide = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
       () => {
         setKeyboardVisible(false);
         scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -74,21 +66,25 @@ export default function Login() {
   }, []);
 
   if (!auth || !theme) {
-    return <Text>Error: Login debe estar dentro de AuthProvider y ThemeProvider</Text>;
+    return (
+      <Text>
+        Error: Login debe estar dentro de AuthProvider y ThemeProvider
+      </Text>
+    );
   }
 
   const { login } = auth;
   const { isDark, themeMode, setThemeMode, colors } = theme;
 
   const toggleTheme = () => {
-    if (themeMode === 'light') setThemeMode('dark');
-    else if (themeMode === 'dark') setThemeMode('auto');
-    else setThemeMode('light');
+    if (themeMode === "light") setThemeMode("dark");
+    else if (themeMode === "dark") setThemeMode("auto");
+    else setThemeMode("light");
   };
 
   const getThemeIcon = () => {
-    if (themeMode === 'auto') return 'phone-portrait-outline';
-    return isDark ? 'moon' : 'sunny';
+    if (themeMode === "auto") return "phone-portrait-outline";
+    return isDark ? "moon" : "sunny";
   };
 
   const loadSavedEmail = async () => {
@@ -159,13 +155,13 @@ export default function Login() {
       };
 
       await login(data.user.id.toString(), userData);
-      
+
       if (rememberMe) {
         await AsyncStorage.setItem("savedEmail", email.trim());
       } else {
         await AsyncStorage.removeItem("savedEmail");
       }
-      
+
       router.replace("/(tabs)");
     } else {
       handleLoginError(data.message);
@@ -225,40 +221,39 @@ export default function Login() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        behavior={undefined}
+        keyboardVerticalOffset={0}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView
-            ref={scrollViewRef}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={true}
-          >
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.innerContainer}>
-              {/* Header con logo y toggle */}
-              <View style={styles.header}>
-                <View style={styles.logoWrapper}>
-                  <View style={styles.logoBackground}>
-                    <Image source={logoImage} style={styles.logoImage} />
-                  </View>
+              {/* Logo con fondo */}
+              <View style={styles.logoWrapper}>
+                <View style={styles.logoBackground}>
+                  <Image source={logoImage} style={styles.logoImage} />
                 </View>
-
-                <TouchableOpacity 
-                  style={styles.themeToggle}
-                  onPress={toggleTheme}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons 
-                    name={getThemeIcon()} 
-                    size={22} 
-                    color={isDark ? '#F9FAFB' : '#1F2937'}
-                  />
-                </TouchableOpacity>
               </View>
 
-              {/* Imagen del dentista - solo visible sin teclado */}
+              {/* Toggle de tema con fondo */}
+              <TouchableOpacity
+                style={styles.themeToggle}
+                onPress={toggleTheme}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={getThemeIcon()}
+                  size={22}
+                  color={isDark ? "#F9FAFB" : "#1F2937"}
+                />
+              </TouchableOpacity>
+
+              {/* Imagen del dentista */}
               {!keyboardVisible && (
                 <View style={styles.imageContainer}>
                   <Image source={dentistImage} style={styles.dentistImage} />
@@ -270,7 +265,9 @@ export default function Login() {
                 <View style={styles.headerContainer}>
                   <Text style={styles.title}>Bienvenido</Text>
                   <Text style={styles.subtitle}>Odontología Carol</Text>
-                  <Text style={styles.description}>Accede a tu cuenta personal dental</Text>
+                  <Text style={styles.description}>
+                    Accede a tu cuenta personal dental
+                  </Text>
                 </View>
 
                 <View style={styles.formContent}>
@@ -283,7 +280,6 @@ export default function Login() {
                         style={styles.inputIcon}
                       />
                       <TextInput
-                        ref={emailInputRef}
                         style={[styles.input, emailError && styles.inputError]}
                         placeholder="Correo electrónico"
                         keyboardType="email-address"
@@ -295,7 +291,6 @@ export default function Login() {
                           setEmail(text);
                           if (emailError) setEmailError("");
                         }}
-                        onSubmitEditing={() => passwordInputRef.current?.focus()}
                         editable={!loading}
                       />
                     </View>
@@ -313,8 +308,10 @@ export default function Login() {
                         style={styles.inputIcon}
                       />
                       <TextInput
-                        ref={passwordInputRef}
-                        style={[styles.input, passwordError && styles.inputError]}
+                        style={[
+                          styles.input,
+                          passwordError && styles.inputError,
+                        ]}
                         placeholder="Contraseña"
                         secureTextEntry={!showPassword}
                         placeholderTextColor={colors.textSecondary}
@@ -333,7 +330,9 @@ export default function Login() {
                         disabled={loading}
                       >
                         <Ionicons
-                          name={showPassword ? "eye-outline" : "eye-off-outline"}
+                          name={
+                            showPassword ? "eye-outline" : "eye-off-outline"
+                          }
                           size={20}
                           color={colors.icon}
                         />
@@ -364,12 +363,17 @@ export default function Login() {
                       disabled={loading}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.forgotText}>¿Olvidó su contraseña?</Text>
+                      <Text style={styles.forgotText}>
+                        ¿Olvidó su contraseña?
+                      </Text>
                     </TouchableOpacity>
                   </View>
 
                   <TouchableOpacity
-                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                    style={[
+                      styles.loginButton,
+                      loading && styles.loginButtonDisabled,
+                    ]}
                     onPress={handleLogin}
                     disabled={loading}
                     activeOpacity={0.8}
@@ -382,7 +386,9 @@ export default function Login() {
                   </TouchableOpacity>
 
                   <View style={styles.registerContainer}>
-                    <Text style={styles.registerQuestion}>¿No tienes cuenta?</Text>
+                    <Text style={styles.registerQuestion}>
+                      ¿No tienes cuenta?
+                    </Text>
                     <TouchableOpacity
                       onPress={handleRegister}
                       disabled={loading}
@@ -394,209 +400,209 @@ export default function Login() {
                 </View>
               </View>
             </View>
-          </ScrollView>
-        </TouchableWithoutFeedback>
+          </TouchableWithoutFeedback>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const createStyles = (colors: any, keyboardVisible: boolean) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  innerContainer: {
-    flex: 1,
-    minHeight: height,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === "ios" ? 10 : 20,
-    paddingBottom: keyboardVisible ? 10 : 20,
-    zIndex: 10,
-  },
-  logoWrapper: {
-    flex: 0,
-  },
-  logoBackground: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  logoImage: {
-    width: width * 0.2,
-    height: width * 0.12,
-    resizeMode: "contain",
-  },
-  themeToggle: {
-    padding: 10,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  imageContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 20,
-    minHeight: height * 0.3,
-  },
-  dentistImage: {
-    width: width * 0.55,
-    height: width * 0.55,
-    resizeMode: "contain",
-  },
-  formContainer: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingTop: keyboardVisible ? 20 : 32,
-    paddingBottom: keyboardVisible ? 16 : 24,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  headerContainer: {
-    paddingHorizontal: 24,
-    marginBottom: keyboardVisible ? 16 : 24,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: keyboardVisible ? 22 : 28,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: keyboardVisible ? 2 : 4,
-  },
-  subtitle: {
-    fontSize: keyboardVisible ? 16 : 20,
-    fontWeight: "600",
-    color: colors.primary,
-    marginBottom: keyboardVisible ? 4 : 8,
-  },
-  description: {
-    fontSize: keyboardVisible ? 12 : 15,
-    color: colors.textSecondary,
-  },
-  formContent: {
-    paddingHorizontal: 24,
-  },
-  inputWrapper: {
-    marginBottom: keyboardVisible ? 12 : 18,
-  },
-  inputContainer: {
-    position: "relative",
-    width: "100%",
-  },
-  input: {
-    width: "100%",
-    height: keyboardVisible ? 46 : 52,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingLeft: 48,
-    paddingRight: 48,
-    backgroundColor: colors.inputBg,
-    fontSize: 15,
-    color: colors.text,
-  },
-  inputError: {
-    borderColor: colors.error,
-    backgroundColor: colors.errorBg,
-  },
-  inputIcon: {
-    position: "absolute",
-    top: keyboardVisible ? 13 : 16,
-    left: 14,
-    zIndex: 1,
-  },
-  eyeIcon: {
-    position: "absolute",
-    top: keyboardVisible ? 13 : 16,
-    right: 14,
-    zIndex: 1,
-    padding: 4,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
-    fontWeight: "500",
-  },
-  optionsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: keyboardVisible ? 16 : 20,
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  checkboxLabel: {
-    fontSize: keyboardVisible ? 13 : 14,
-    color: colors.text,
-    marginLeft: 8,
-  },
-  forgotText: {
-    fontSize: keyboardVisible ? 12 : 13,
-    color: colors.primary,
-    fontWeight: "500",
-  },
-  loginButton: {
-    backgroundColor: colors.primaryDark,
-    paddingVertical: keyboardVisible ? 12 : 16,
-    borderRadius: 12,
-    width: "100%",
-    shadowColor: colors.primaryDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  loginButtonDisabled: {
-    opacity: 0.6,
-  },
-  loginButtonText: {
-    color: "white",
-    fontWeight: "700",
-    textAlign: "center",
-    fontSize: keyboardVisible ? 15 : 17,
-    letterSpacing: 0.5,
-  },
-  registerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: keyboardVisible ? 12 : 20,
-    gap: 6,
-  },
-  registerQuestion: {
-    fontSize: keyboardVisible ? 13 : 14,
-    color: colors.textSecondary,
-  },
-  registerLink: {
-    fontSize: keyboardVisible ? 13 : 14,
-    color: colors.primary,
-    fontWeight: "600",
-  },
-});
+const createStyles = (colors: any, keyboardVisible: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    innerContainer: {
+      flex: 1,
+      minHeight: keyboardVisible ? height * 0.95 : height,
+    },
+    logoWrapper: {
+      position: "absolute",
+      top: Platform.OS === "ios" ? 50 : 40,
+      left: 10,
+      zIndex: 10,
+    },
+    logoBackground: {
+      backgroundColor: "rgba(255, 255, 255, 0.95)",
+      paddingHorizontal: 6,
+      paddingVertical: 4,
+      borderRadius: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    logoImage: {
+      width: width * 0.2,
+      height: width * 0.12,
+      resizeMode: "contain",
+    },
+    themeToggle: {
+      position: "absolute",
+      top: Platform.OS === "ios" ? 50 : 40,
+      right: 20,
+      zIndex: 10,
+      padding: 10,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    imageContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingTop: height * 0.08,
+      minHeight: height * 0.35,
+    },
+    dentistImage: {
+      width: width * 0.6,
+      height: width * 0.6,
+      resizeMode: "contain",
+    },
+    formContainer: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 32,
+      borderTopRightRadius: 32,
+      paddingTop: keyboardVisible ? 20 : 32,
+      paddingBottom: keyboardVisible ? 20 : 24,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 6,
+      flexGrow: keyboardVisible ? 1 : 0,
+    },
+    headerContainer: {
+      paddingHorizontal: 24,
+      marginBottom: keyboardVisible ? 25 : 30,
+      alignItems: "center",
+    },
+    title: {
+      fontSize: keyboardVisible ? 24 : 28,
+      fontWeight: "700",
+      color: colors.text,
+      marginBottom: 4,
+    },
+    subtitle: {
+      fontSize: keyboardVisible ? 18 : 20,
+      fontWeight: "600",
+      color: colors.primary,
+      marginBottom: 8,
+    },
+    description: {
+      fontSize: keyboardVisible ? 13 : 15,
+      color: colors.textSecondary,
+    },
+    formContent: {
+      paddingHorizontal: 24,
+    },
+    inputWrapper: {
+      marginBottom: keyboardVisible ? 16 : 20,
+    },
+    inputContainer: {
+      position: "relative",
+      width: "100%",
+    },
+    input: {
+      width: "100%",
+      height: keyboardVisible ? 48 : 52,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingLeft: 48,
+      paddingRight: 48,
+      backgroundColor: colors.inputBg,
+      fontSize: 15,
+      color: colors.text,
+    },
+    inputError: {
+      borderColor: colors.error,
+      backgroundColor: colors.errorBg,
+    },
+    inputIcon: {
+      position: "absolute",
+      top: keyboardVisible ? 14 : 16,
+      left: 14,
+      zIndex: 1,
+    },
+    eyeIcon: {
+      position: "absolute",
+      top: keyboardVisible ? 14 : 16,
+      right: 14,
+      zIndex: 1,
+      padding: 4,
+    },
+    errorText: {
+      color: colors.error,
+      fontSize: 13,
+      marginTop: 6,
+      marginLeft: 4,
+      fontWeight: "500",
+    },
+    optionsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: keyboardVisible ? 20 : 24,
+    },
+    checkboxContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    checkboxLabel: {
+      fontSize: 14,
+      color: colors.text,
+      marginLeft: 8,
+    },
+    forgotText: {
+      fontSize: 13,
+      color: colors.primary,
+      fontWeight: "500",
+    },
+    loginButton: {
+      backgroundColor: colors.primaryDark,
+      paddingVertical: keyboardVisible ? 14 : 16,
+      borderRadius: 12,
+      width: "100%",
+      shadowColor: colors.primaryDark,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    loginButtonDisabled: {
+      opacity: 0.6,
+    },
+    loginButtonText: {
+      color: "white",
+      fontWeight: "700",
+      textAlign: "center",
+      fontSize: 17,
+      letterSpacing: 0.5,
+    },
+    registerContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: keyboardVisible ? 16 : 24,
+      gap: 6,
+    },
+    registerQuestion: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    registerLink: {
+      fontSize: 14,
+      color: colors.primary,
+      fontWeight: "600",
+    },
+  });
