@@ -34,6 +34,8 @@ export default function Login() {
   const auth = useContext(AuthContext);
   const theme = useContext(ThemeContext);
   const scrollViewRef = useRef<ScrollView>(null);
+  const emailInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,8 +50,15 @@ export default function Login() {
 
     const keyboardWillShow = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      () => setKeyboardVisible(true)
+      (e) => {
+        setKeyboardVisible(true);
+        // Scroll hacia arriba cuando se abre el teclado
+        setTimeout(() => {
+          scrollViewRef.current?.scrollTo({ y: 100, animated: true });
+        }, 100);
+      }
     );
+    
     const keyboardWillHide = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
@@ -216,39 +225,40 @@ export default function Login() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            ref={scrollViewRef}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+          >
             <View style={styles.innerContainer}>
-              {/* Logo con fondo */}
-              <View style={styles.logoWrapper}>
-                <View style={styles.logoBackground}>
-                  <Image source={logoImage} style={styles.logoImage} />
+              {/* Header con logo y toggle */}
+              <View style={styles.header}>
+                <View style={styles.logoWrapper}>
+                  <View style={styles.logoBackground}>
+                    <Image source={logoImage} style={styles.logoImage} />
+                  </View>
                 </View>
+
+                <TouchableOpacity 
+                  style={styles.themeToggle}
+                  onPress={toggleTheme}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons 
+                    name={getThemeIcon()} 
+                    size={22} 
+                    color={isDark ? '#F9FAFB' : '#1F2937'}
+                  />
+                </TouchableOpacity>
               </View>
 
-              {/* Toggle de tema con fondo */}
-              <TouchableOpacity 
-                style={styles.themeToggle}
-                onPress={toggleTheme}
-                activeOpacity={0.7}
-              >
-                <Ionicons 
-                  name={getThemeIcon()} 
-                  size={22} 
-                  color={isDark ? '#F9FAFB' : '#1F2937'}
-                />
-              </TouchableOpacity>
-
-              {/* Imagen del dentista */}
+              {/* Imagen del dentista - solo visible sin teclado */}
               {!keyboardVisible && (
                 <View style={styles.imageContainer}>
                   <Image source={dentistImage} style={styles.dentistImage} />
@@ -273,6 +283,7 @@ export default function Login() {
                         style={styles.inputIcon}
                       />
                       <TextInput
+                        ref={emailInputRef}
                         style={[styles.input, emailError && styles.inputError]}
                         placeholder="Correo electrónico"
                         keyboardType="email-address"
@@ -284,6 +295,7 @@ export default function Login() {
                           setEmail(text);
                           if (emailError) setEmailError("");
                         }}
+                        onSubmitEditing={() => passwordInputRef.current?.focus()}
                         editable={!loading}
                       />
                     </View>
@@ -301,6 +313,7 @@ export default function Login() {
                         style={styles.inputIcon}
                       />
                       <TextInput
+                        ref={passwordInputRef}
                         style={[styles.input, passwordError && styles.inputError]}
                         placeholder="Contraseña"
                         secureTextEntry={!showPassword}
@@ -381,8 +394,8 @@ export default function Login() {
                 </View>
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        </ScrollView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -398,13 +411,19 @@ const createStyles = (colors: any, keyboardVisible: boolean) => StyleSheet.creat
   },
   innerContainer: {
     flex: 1,
-    minHeight: keyboardVisible ? height * 0.85 : height,
+    minHeight: height,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 10 : 20,
+    paddingBottom: keyboardVisible ? 10 : 20,
+    zIndex: 10,
   },
   logoWrapper: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 50 : 40,
-    left: 20,
-    zIndex: 10,
+    flex: 0,
   },
   logoBackground: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -423,10 +442,6 @@ const createStyles = (colors: any, keyboardVisible: boolean) => StyleSheet.creat
     resizeMode: "contain",
   },
   themeToggle: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 50 : 40,
-    right: 20,
-    zIndex: 10,
     padding: 10,
     backgroundColor: colors.card,
     borderRadius: 12,
@@ -440,53 +455,52 @@ const createStyles = (colors: any, keyboardVisible: boolean) => StyleSheet.creat
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: height * 0.08,
-    minHeight: height * 0.35,
+    paddingVertical: 20,
+    minHeight: height * 0.3,
   },
   dentistImage: {
-    width: width * 0.6,
-    height: width * 0.6,
+    width: width * 0.55,
+    height: width * 0.55,
     resizeMode: "contain",
   },
   formContainer: {
     backgroundColor: colors.card,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    paddingTop: keyboardVisible ? 30 : 40,
-    paddingBottom: keyboardVisible ? 20 : 32,
+    paddingTop: keyboardVisible ? 20 : 32,
+    paddingBottom: keyboardVisible ? 16 : 24,
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
-    minHeight: keyboardVisible ? undefined : height * 0.55,
   },
   headerContainer: {
     paddingHorizontal: 24,
-    marginBottom: keyboardVisible ? 20 : 32,
+    marginBottom: keyboardVisible ? 16 : 24,
     alignItems: "center",
   },
   title: {
-    fontSize: keyboardVisible ? 24 : 28,
+    fontSize: keyboardVisible ? 22 : 28,
     fontWeight: "700",
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: keyboardVisible ? 2 : 4,
   },
   subtitle: {
-    fontSize: keyboardVisible ? 18 : 20,
+    fontSize: keyboardVisible ? 16 : 20,
     fontWeight: "600",
     color: colors.primary,
-    marginBottom: 8,
+    marginBottom: keyboardVisible ? 4 : 8,
   },
   description: {
-    fontSize: keyboardVisible ? 13 : 15,
+    fontSize: keyboardVisible ? 12 : 15,
     color: colors.textSecondary,
   },
   formContent: {
     paddingHorizontal: 24,
   },
   inputWrapper: {
-    marginBottom: keyboardVisible ? 16 : 20,
+    marginBottom: keyboardVisible ? 12 : 18,
   },
   inputContainer: {
     position: "relative",
@@ -494,7 +508,7 @@ const createStyles = (colors: any, keyboardVisible: boolean) => StyleSheet.creat
   },
   input: {
     width: "100%",
-    height: keyboardVisible ? 48 : 52,
+    height: keyboardVisible ? 46 : 52,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: 12,
@@ -510,21 +524,21 @@ const createStyles = (colors: any, keyboardVisible: boolean) => StyleSheet.creat
   },
   inputIcon: {
     position: "absolute",
-    top: keyboardVisible ? 14 : 16,
+    top: keyboardVisible ? 13 : 16,
     left: 14,
     zIndex: 1,
   },
   eyeIcon: {
     position: "absolute",
-    top: keyboardVisible ? 14 : 16,
+    top: keyboardVisible ? 13 : 16,
     right: 14,
     zIndex: 1,
     padding: 4,
   },
   errorText: {
     color: colors.error,
-    fontSize: 13,
-    marginTop: 6,
+    fontSize: 12,
+    marginTop: 4,
     marginLeft: 4,
     fontWeight: "500",
   },
@@ -532,25 +546,25 @@ const createStyles = (colors: any, keyboardVisible: boolean) => StyleSheet.creat
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: keyboardVisible ? 20 : 24,
+    marginBottom: keyboardVisible ? 16 : 20,
   },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   checkboxLabel: {
-    fontSize: 14,
+    fontSize: keyboardVisible ? 13 : 14,
     color: colors.text,
     marginLeft: 8,
   },
   forgotText: {
-    fontSize: 13,
+    fontSize: keyboardVisible ? 12 : 13,
     color: colors.primary,
     fontWeight: "500",
   },
   loginButton: {
     backgroundColor: colors.primaryDark,
-    paddingVertical: keyboardVisible ? 14 : 16,
+    paddingVertical: keyboardVisible ? 12 : 16,
     borderRadius: 12,
     width: "100%",
     shadowColor: colors.primaryDark,
@@ -566,22 +580,22 @@ const createStyles = (colors: any, keyboardVisible: boolean) => StyleSheet.creat
     color: "white",
     fontWeight: "700",
     textAlign: "center",
-    fontSize: 17,
+    fontSize: keyboardVisible ? 15 : 17,
     letterSpacing: 0.5,
   },
   registerContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: keyboardVisible ? 16 : 24,
+    marginTop: keyboardVisible ? 12 : 20,
     gap: 6,
   },
   registerQuestion: {
-    fontSize: 14,
+    fontSize: keyboardVisible ? 13 : 14,
     color: colors.textSecondary,
   },
   registerLink: {
-    fontSize: 14,
+    fontSize: keyboardVisible ? 13 : 14,
     color: colors.primary,
     fontWeight: "600",
   },
