@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function DetalleCitaScreen() {
@@ -16,94 +16,117 @@ export default function DetalleCitaScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#7BB7F2" />
+      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
       
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detalles de la cita</Text>
-      </View>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.push('/(tabs)')} style={styles.backButton} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={26} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Detalles de la Cita</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Card principal */}
         <View style={styles.card}>
+          {/* Header de la cita */}
           <View style={styles.citaHeader}>
-            <View style={styles.citaTitleContainer}>
-              <Ionicons name="calendar" size={32} color="#000" />
-              <View>
-                <Text style={styles.citaTitle}>Cita 1</Text>
-                <Text style={styles.citaSession}>sesión: 1 de 6</Text>
+            <View style={styles.iconBox}>
+              <Ionicons name="calendar" size={28} color="#FFF" />
+            </View>
+            <View style={styles.citaHeaderInfo}>
+              <Text style={styles.citaTitulo}>Cita 1</Text>
+              <Text style={styles.citaSesion}>Sesión 1 de 6</Text>
+            </View>
+          </View>
+
+          {/* Fecha y hora */}
+          <View style={styles.fechaBox}>
+            <View style={styles.fechaRow}>
+              <Ionicons name="calendar-outline" size={18} color="rgba(255, 255, 255, 0.8)" />
+              <Text style={styles.fechaText}>Miércoles, 24 de septiembre de 2025</Text>
+            </View>
+            <View style={styles.fechaRow}>
+              <Ionicons name="time-outline" size={18} color="rgba(255, 255, 255, 0.8)" />
+              <Text style={styles.horaText}>10:00 AM</Text>
+            </View>
+          </View>
+
+          {/* Información del paciente */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Información del Paciente</Text>
+            <View style={styles.infoContainer}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Paciente:</Text>
+                <Text style={styles.infoValue}>Emmanuel Rodríguez Martínez</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Edad:</Text>
+                <Text style={styles.infoValue}>20 años</Text>
               </View>
             </View>
-            <View style={styles.citaDateContainer}>
-              <Text style={styles.citaDate}>Miércoles, 24 de</Text>
-              <Text style={styles.citaDate}>septiembre de 2025</Text>
-              <Text style={styles.citaTime}>10:00 AM</Text>
-            </View>
           </View>
 
-          <View style={styles.infoRow}>
-            <View style={styles.infoColumn}>
-              <Text style={styles.infoLabel}>Paciente:</Text>
-              <View style={styles.infoBadge}>
-                <Text style={styles.infoText}>Emmanuel Rodriguez Martinez</Text>
+          {/* Información médica */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Información Médica</Text>
+            <View style={styles.infoContainer}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Odontólogo:</Text>
+                <Text style={styles.infoValue}>Dr. Hugo Gómez Ramírez</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Tratamiento:</Text>
+                <Text style={styles.infoValue}>Ortodoncia - Ajuste de brackets</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Duración:</Text>
+                <Text style={styles.infoValue}>40 minutos</Text>
               </View>
             </View>
-            <View style={styles.infoColumnSmall}>
-              <Text style={styles.infoLabel}>Edad:</Text>
-              <View style={styles.infoBadgeSmall}>
-                <Text style={styles.infoText}>20</Text>
-              </View>
-            </View>
           </View>
 
-          <View style={styles.infoFullRow}>
-            <Text style={styles.infoLabel}>Odontologo:</Text>
-            <View style={styles.infoBadge}>
-              <Text style={styles.infoText}>Dr. Hugo Gómez Ramírez</Text>
-            </View>
-          </View>
-
-          <View style={styles.infoFullRow}>
-            <Text style={styles.infoLabel}>Tratamiento:</Text>
-            <View style={styles.infoBadge}>
-              <Text style={styles.infoText}>Ortodoncia – Ajuste de brackets</Text>
-            </View>
-          </View>
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoColumn}>
-              <Text style={styles.infoLabel}>Estado:</Text>
+          {/* Estado de la cita */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Estado</Text>
+            <View style={styles.estadoContainer}>
               <View style={styles.estadoBadge}>
+                <Ionicons name="checkmark-circle" size={20} color="#FFF" />
                 <Text style={styles.estadoText}>Completada</Text>
               </View>
             </View>
-            <View style={styles.infoColumn}>
-              <Text style={styles.infoLabel}>Duración estimada:</Text>
-              <View style={styles.infoBadgeSmall}>
-                <Text style={styles.infoText}>40 min</Text>
+          </View>
+
+          {/* Información de pago */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Información de Pago</Text>
+            <View style={styles.pagoContainer}>
+              <View style={styles.pagoRow}>
+                <View style={styles.pagoBox}>
+                  <Text style={styles.pagoLabel}>Monto</Text>
+                  <Text style={styles.pagoMonto}>$600 MXN</Text>
+                </View>
+                <View style={styles.pagoBox}>
+                  <Text style={styles.pagoLabel}>Estatus</Text>
+                  <View style={styles.pagadoBadge}>
+                    <Ionicons name="checkmark-circle" size={16} color="#FFF" />
+                    <Text style={styles.pagadoText}>Pagado</Text>
+                  </View>
+                </View>
               </View>
             </View>
           </View>
 
-          <View style={styles.infoRow}>
-            <View style={styles.infoColumn}>
-              <Text style={styles.infoLabel}>Pago:</Text>
-              <View style={styles.pagoBadge}>
-                <Text style={styles.pagoText}>$600 MXN</Text>
-              </View>
-            </View>
-            <View style={styles.infoColumn}>
-              <Text style={styles.infoLabel}>Estatus:</Text>
-              <View style={styles.infoBadgeSmall}>
-                <Text style={styles.infoText}>Pagado</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.notasContainer}>
-            <Text style={styles.infoLabel}>Notas clínicas:</Text>
-            <View style={styles.notasBox}>
+          {/* Notas clínicas */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notas Clínicas</Text>
+            <View style={styles.notasContainer}>
+              <MaterialCommunityIcons name="text" size={20} color="rgba(255, 255, 255, 0.7)" />
               <Text style={styles.notasText}>
                 Se ajustó arco superior y se cambiaron ligas elásticas. Ligera sensibilidad esperada por 24-48 h
               </Text>
@@ -111,18 +134,25 @@ export default function DetalleCitaScreen() {
           </View>
         </View>
 
+        {/* Botones de navegación */}
         <View style={styles.navigationButtons}>
-          <TouchableOpacity style={styles.navButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-            <Text style={styles.navButtonText}>Atras</Text>
+          <TouchableOpacity 
+            style={styles.navButton} 
+            onPress={() => router.push('/screens/citas')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={20} color="#FFF" />
+            <Text style={styles.navButtonText}>Volver a Citas</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navButton}>
-            <Text style={styles.navButtonText}>Siguiente cita</Text>
+          <TouchableOpacity 
+            style={styles.navButtonSecondary}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.navButtonText}>Siguiente Cita</Text>
+            <Ionicons name="arrow-forward" size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
-
-        <View style={styles.bottomSpace} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -131,170 +161,246 @@ export default function DetalleCitaScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#7BB7F2',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    backgroundColor: '#7BB7F2',
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000',
+    backgroundColor: '#2563EB',
   },
   scrollView: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 50,
+    paddingBottom: 24,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderBottomWidth: 4,
+    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  placeholder: {
+    width: 44,
+  },
   card: {
-    backgroundColor: '#FFF',
-    marginHorizontal: 16,
-    marginTop: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    marginHorizontal: 24,
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderBottomWidth: 6,
+    borderBottomColor: 'rgba(0, 0, 0, 0.5)',
   },
   citaHeader: {
-    marginBottom: 24,
-  },
-  citaTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+    marginBottom: 20,
   },
-  citaTitle: {
+  iconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderBottomWidth: 3,
+    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  citaHeaderInfo: {
+    flex: 1,
+  },
+  citaTitulo: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: '700',
+    color: '#FFF',
+    marginBottom: 4,
   },
-  citaSession: {
+  citaSesion: {
     fontSize: 14,
-    color: '#6B7280',
+    color: 'rgba(255, 255, 255, 0.8)',
   },
-  citaDateContainer: {
-    alignItems: 'flex-end',
+  fechaBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 20,
+    gap: 10,
   },
-  citaDate: {
+  fechaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  fechaText: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontWeight: '500',
+  },
+  horaText: {
     fontSize: 16,
-    color: '#000',
+    color: '#FFF',
+    fontWeight: '700',
   },
-  citaTime: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginTop: 4,
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
   },
   infoRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  infoColumn: {
-    flex: 1,
-  },
-  infoColumnSmall: {
-    width: 100,
-  },
-  infoFullRow: {
-    marginBottom: 16,
   },
   infoLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
-    marginBottom: 8,
+    color: 'rgba(255, 255, 255, 0.7)',
+    width: 110,
   },
-  infoBadge: {
-    backgroundColor: '#BFDBFE',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-  },
-  infoBadgeSmall: {
-    backgroundColor: '#BFDBFE',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  infoText: {
+  infoValue: {
+    flex: 1,
     fontSize: 14,
-    color: '#000',
+    color: '#FFF',
+    fontWeight: '500',
+  },
+  estadoContainer: {
+    flexDirection: 'row',
   },
   estadoBadge: {
-    backgroundColor: '#86EFAC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34, 197, 94, 0.3)',
     paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: 12,
-    alignSelf: 'flex-start',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(34, 197, 94, 0.5)',
   },
   estadoText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFF',
   },
-  pagoBadge: {
-    backgroundColor: '#FDE68A',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+  pagoContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     borderRadius: 12,
-    alignSelf: 'flex-start',
+    padding: 14,
   },
-  pagoText: {
-    fontSize: 14,
+  pagoRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  pagoBox: {
+    flex: 1,
+  },
+  pagoLabel: {
+    fontSize: 12,
     fontWeight: '600',
-    color: '#000',
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  pagoMonto: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  pagadoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34, 197, 94, 0.3)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    gap: 6,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.4)',
+  },
+  pagadoText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFF',
   },
   notasContainer: {
-    marginTop: 8,
-  },
-  notasBox: {
-    backgroundColor: '#BFDBFE',
-    padding: 16,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     borderRadius: 12,
+    padding: 14,
+    gap: 10,
   },
   notasText: {
+    flex: 1,
     fontSize: 14,
-    color: '#000',
+    color: 'rgba(255, 255, 255, 0.95)',
     lineHeight: 20,
   },
   navigationButtons: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     marginTop: 20,
+    gap: 12,
   },
   navButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF',
-    paddingVertical: 16,
-    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderBottomWidth: 3,
+    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  navButtonSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderBottomWidth: 3,
+    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
   },
   navButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  bottomSpace: {
-    height: 30,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFF',
   },
 });
