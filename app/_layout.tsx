@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { useContext, useEffect, useRef } from "react";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthContext, AuthProvider } from "../contexts/AuthContext";
 import {
   Text,
@@ -132,9 +133,11 @@ function LayoutContent() {
 // Layout raíz con el provider
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <LayoutContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <LayoutContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
