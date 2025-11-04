@@ -1,454 +1,374 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  TextInput,
-} from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React, { useContext, useState } from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Dimensions,
+  Modal,
+} from 'react-native';
+import { ThemeContext } from '../contexts/ThemeContext';
 
-export default function TratamientosScreen() {
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+
+export default function ExploreScreen() {
   const router = useRouter();
-  const [selectedFilter, setSelectedFilter] = useState('Todos');
-  const [searchQuery, setSearchQuery] = useState('');
+  const theme = useContext(ThemeContext);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Todos');
 
-  const tratamientos = [
-    {
-      id: 1,
-      titulo: 'Ortodoncia',
-      progreso: 65,
-      proximaCita: '28 Oct 2025',
-      doctor: 'Dra. Carol García',
-      estado: 'activo',
+  if (!theme) return null;
+
+  const { colors, isDark } = theme;
+
+  const categories = [
+    { id: 'all', name: 'Todos', icon: 'grid-outline' },
+    { id: 'preventive', name: 'Preventivos', icon: 'shield-checkmark-outline' },
+    { id: 'aesthetic', name: 'Estéticos', icon: 'sparkles-outline' },
+    { id: 'restorative', name: 'Restaurativos', icon: 'build-outline' },
+    { id: 'emergency', name: 'Urgencias', icon: 'alert-circle-outline' },
+  ];
+
+  const services = [
+    { 
+      id: 1, 
+      name: 'Limpieza Dental', 
+      category: 'preventive',
+      description: 'Profilaxis profesional',
+      icon: 'water-outline',
+      price: 'Desde $500'
     },
-    {
-      id: 2,
-      titulo: 'Limpieza Dental',
-      progreso: 30,
-      proximaCita: '5 Nov 2025',
-      doctor: 'Dr. Luis Mendoza',
-      estado: 'activo',
+    { 
+      id: 2, 
+      name: 'Blanqueamiento', 
+      category: 'aesthetic',
+      description: 'Tratamiento estético',
+      icon: 'sparkles-outline',
+      price: 'Desde $2,500'
     },
-    {
-      id: 3,
-      titulo: 'Extracción',
-      progreso: 100,
-      proximaCita: 'Completado',
-      doctor: 'Dr. Carlos Ruiz',
-      estado: 'completado',
+    { 
+      id: 3, 
+      name: 'Ortodoncia', 
+      category: 'aesthetic',
+      description: 'Alineación dental',
+      icon: 'grid-outline',
+      price: 'Consultar'
+    },
+    { 
+      id: 4, 
+      name: 'Endodoncia', 
+      category: 'restorative',
+      description: 'Tratamiento de conducto',
+      icon: 'medical-outline',
+      price: 'Desde $3,000'
+    },
+    { 
+      id: 5, 
+      name: 'Extracción', 
+      category: 'emergency',
+      description: 'Procedimiento quirúrgico',
+      icon: 'cut-outline',
+      price: 'Desde $800'
+    },
+    { 
+      id: 6, 
+      name: 'Implantes', 
+      category: 'restorative',
+      description: 'Reemplazo dental',
+      icon: 'fitness-outline',
+      price: 'Consultar'
     },
   ];
 
-  const filtros = ['Todos', 'Activos', 'Completados'];
+  const filteredServices = selectedCategory === 'Todos' 
+    ? services 
+    : services.filter(s => s.category === categories.find(c => c.name === selectedCategory)?.id);
 
-  const tratamientosFiltrados = tratamientos.filter(t => {
-    if (selectedFilter === 'Activos') return t.estado === 'activo';
-    if (selectedFilter === 'Completados') return t.estado === 'completado';
-    const matchSearch = t.titulo.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchSearch;
-  });
+  const styles = createStyles(colors, isDark);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={colors.background} 
+      />
       
       <ScrollView 
-        style={styles.scrollView} 
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)')} style={styles.backButton} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={26} color="#FFF" />
+          <View>
+            <Text style={styles.headerTitle}>Servicios</Text>
+            <Text style={styles.headerSubtitle}>Explora nuestros tratamientos</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.filterButton}
+            activeOpacity={0.7}
+            onPress={() => setFilterModalVisible(true)}
+          >
+            <Ionicons name="options-outline" size={20} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Mis Tratamientos</Text>
-          <View style={styles.placeholder} />
         </View>
 
-        {/* Búsqueda */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={20} color="rgba(255, 255, 255, 0.7)" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Buscar tratamiento..."
-              placeholderTextColor="rgba(255, 255, 255, 0.5)"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-                <Ionicons name="close-circle" size={20} color="rgba(255, 255, 255, 0.7)" />
-              </TouchableOpacity>
-            )}
+        <View style={styles.selectedFilterContainer}>
+          <View style={styles.selectedFilter}>
+            <Text style={styles.selectedFilterText}>{selectedCategory}</Text>
           </View>
         </View>
 
-        {/* Filtros */}
-        <View style={styles.filtersContainer}>
-          {filtros.map((filtro) => (
-            <TouchableOpacity
-              key={filtro}
-              style={[
-                styles.filterButton,
-                selectedFilter === filtro && styles.filterButtonActive,
-              ]}
-              onPress={() => setSelectedFilter(filtro)}
+        <View style={styles.servicesContainer}>
+          {filteredServices.map((service) => (
+            <TouchableOpacity 
+              key={service.id}
+              style={styles.serviceCard}
               activeOpacity={0.7}
             >
-              <Text
-                style={[
-                  styles.filterText,
-                  selectedFilter === filtro && styles.filterTextActive,
-                ]}
-              >
-                {filtro}
-              </Text>
-              {selectedFilter === filtro && (
-                <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
-              )}
+              <View style={styles.serviceIcon}>
+                <Ionicons name={service.icon as any} size={28} color={colors.primary} />
+              </View>
+              <View style={styles.serviceInfo}>
+                <Text style={styles.serviceName}>{service.name}</Text>
+                <Text style={styles.serviceDescription}>{service.description}</Text>
+                <Text style={styles.servicePrice}>{service.price}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.icon} />
             </TouchableOpacity>
           ))}
         </View>
-
-        {/* Tratamientos */}
-        <View style={styles.section}>
-          {tratamientosFiltrados.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="folder-open-outline" size={64} color="rgba(255, 255, 255, 0.4)" />
-              <Text style={styles.emptyText}>No hay tratamientos</Text>
-            </View>
-          ) : (
-            tratamientosFiltrados.map((tratamiento) => (
-              <View 
-                key={tratamiento.id} 
-                style={[
-                  styles.tratamientoCard,
-                  tratamiento.estado === 'completado' && styles.cardCompletado
-                ]}
-              >
-                {/* Header */}
-                <View style={styles.cardHeader}>
-                  <View style={[
-                    styles.iconBox,
-                    tratamiento.estado === 'completado' && styles.iconBoxCompletado
-                  ]}>
-                    <MaterialCommunityIcons 
-                      name="tooth-outline" 
-                      size={24} 
-                      color="#FFF" 
-                    />
-                  </View>
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.cardTitle}>{tratamiento.titulo}</Text>
-                    <Text style={styles.cardDoctor}>{tratamiento.doctor}</Text>
-                  </View>
-                  {tratamiento.estado === 'completado' && (
-                    <View style={styles.badgeCompletado}>
-                      <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                    </View>
-                  )}
-                </View>
-
-                {/* Progreso */}
-                <View style={styles.progressSection}>
-                  <View style={styles.progressInfo}>
-                    <Text style={styles.progressLabel}>Progreso</Text>
-                    <Text style={styles.progressPercent}>{tratamiento.progreso}%</Text>
-                  </View>
-                  <View style={styles.progressBar}>
-                    <View 
-                      style={[
-                        styles.progressFill, 
-                        { width: `${tratamiento.progreso}%` },
-                        tratamiento.estado === 'completado' && styles.progressCompletado
-                      ]} 
-                    />
-                  </View>
-                </View>
-
-                {/* Próxima cita */}
-                <View style={styles.citaInfo}>
-                  <Ionicons name="calendar-outline" size={16} color="rgba(255, 255, 255, 0.8)" />
-                  <Text style={styles.citaText}>Próxima cita: {tratamiento.proximaCita}</Text>
-                </View>
-
-                {/* Botones */}
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => router.push('/screens/detalle-tratamientos')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.actionButtonText}>Ver Detalles</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#FFF" />
-                </TouchableOpacity>
-                
-                {tratamiento.estado === 'activo' && (
-                  <TouchableOpacity 
-                    style={styles.actionButtonSecondary}
-                    onPress={() => router.push('/screens/citas')}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="calendar" size={20} color="#FFF" />
-                    <Text style={styles.actionButtonText}>Ver Citas</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))
-          )}
-        </View>
       </ScrollView>
+
+      <Modal
+        visible={filterModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setFilterModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filtrar por categoría</Text>
+              <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.categoriesContainer}>
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.categoryOption,
+                    selectedCategory === category.name && styles.categoryOptionActive
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setSelectedCategory(category.name);
+                    setFilterModalVisible(false);
+                  }}
+                >
+                  <View style={[
+                    styles.categoryIconContainer,
+                    selectedCategory === category.name && styles.categoryIconActive
+                  ]}>
+                    <Ionicons 
+                      name={category.icon as any} 
+                      size={22} 
+                      color={selectedCategory === category.name ? '#FFF' : colors.primary} 
+                    />
+                  </View>
+                  <Text style={[
+                    styles.categoryName,
+                    selectedCategory === category.name && styles.categoryNameActive
+                  ]}>
+                    {category.name}
+                  </Text>
+                  {selectedCategory === category.name && (
+                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: isSmallDevice ? 40 : 50,
+    paddingBottom: 100,
+    paddingHorizontal: width * 0.05,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 24,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    marginBottom: isSmallDevice ? 20 : 24,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#FFF',
+    fontSize: isSmallDevice ? 24 : 28,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
   },
-  placeholder: {
-    width: 44,
-  },
-  searchContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#FFF',
-    fontSize: 15,
-  },
-  filtersContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-    gap: 12,
+  headerSubtitle: {
+    fontSize: isSmallDevice ? 13 : 14,
+    color: colors.textSecondary,
   },
   filterButton: {
+    width: isSmallDevice ? 40 : 44,
+    height: isSmallDevice ? 40 : 44,
+    borderRadius: isSmallDevice ? 20 : 22,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  selectedFilterContainer: {
+    marginBottom: isSmallDevice ? 16 : 20,
+  },
+  selectedFilter: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.card,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  selectedFilterText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  servicesContainer: {
+    gap: 12,
+  },
+  serviceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: isSmallDevice ? 14 : 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  serviceIcon: {
+    width: isSmallDevice ? 48 : 52,
+    height: isSmallDevice ? 48 : 52,
+    borderRadius: isSmallDevice ? 24 : 26,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  serviceInfo: {
+    flex: 1,
+  },
+  serviceName: {
+    fontSize: isSmallDevice ? 14 : 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 3,
+  },
+  serviceDescription: {
+    fontSize: isSmallDevice ? 12 : 13,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  servicePrice: {
+    fontSize: isSmallDevice ? 12 : 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    maxHeight: '70%',
+  },
+  modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.3)',
+    marginBottom: 24,
   },
-  filterButtonActive: {
-    backgroundColor: '#FFF',
-    borderColor: '#FFF',
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.15)',
-  },
-  filterText: {
-    fontSize: 16,
+  modalTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: colors.text,
   },
-  filterTextActive: {
-    color: '#2563EB',
-    fontWeight: '700',
+  categoriesContainer: {
+    gap: 12,
   },
-  section: {
-    paddingHorizontal: 24,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 16,
-  },
-  tratamientoCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  cardCompletado: {
-    borderColor: 'rgba(34, 197, 94, 0.4)',
-  },
-  cardHeader: {
+  categoryOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  categoryOptionActive: {
+    borderColor: colors.primary,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+  },
+  categoryIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: isDark ? colors.card : '#FFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderColor: colors.border,
   },
-  iconBoxCompletado: {
-    backgroundColor: 'rgba(34, 197, 94, 0.3)',
-    borderColor: 'rgba(34, 197, 94, 0.4)',
+  categoryIconActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  cardInfo: {
+  categoryName: {
     flex: 1,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 4,
-  },
-  cardDoctor: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.85)',
-  },
-  badgeCompletado: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(34, 197, 94, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(34, 197, 94, 0.5)',
-  },
-  progressSection: {
-    marginBottom: 14,
-  },
-  progressInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  progressLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.75)',
-  },
-  progressPercent: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 5,
-  },
-  progressCompletado: {
-    backgroundColor: 'rgba(34, 197, 94, 0.9)',
-  },
-  citaInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 10,
-  },
-  citaText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.95)',
-    fontWeight: '500',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  actionButtonSecondary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    gap: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  actionButtonText: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#FFF',
+    fontWeight: '500',
+    color: colors.text,
+  },
+  categoryNameActive: {
+    fontWeight: '600',
+    color: colors.text,
   },
 });
