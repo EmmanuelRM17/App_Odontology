@@ -1,26 +1,27 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  SafeAreaView,
-  StyleSheet,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
   ActivityIndicator,
   Alert,
-  ScrollView,
   Dimensions,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
 } from "react-native";
-import { useRouter } from "expo-router";
 import { AuthContext } from "../../contexts/AuthContext";
 import { ThemeContext } from "../contexts/ThemeContext";
-import { Ionicons } from "@expo/vector-icons";
-import { Linking } from "react-native";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import dentistImage from "../../assets/images/dentist.png";
 import logoImage from "../../assets/images/logo.png";
@@ -28,7 +29,7 @@ import logoImage from "../../assets/images/logo.png";
 const { width, height } = Dimensions.get("window");
 const EMAIL_REGEX =
   /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|live|uthh\.edu)\.(com|mx)$/;
-const API_URL = "https://back-end-4803.onrender.com/api/users/loginMovil";
+const API_URL = "http://192.168.95.189:3001/api/users/loginMovil";
 
 export default function Login() {
   const router = useRouter();
