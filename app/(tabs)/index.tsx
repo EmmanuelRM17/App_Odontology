@@ -11,17 +11,36 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';
+import { ThemeContext } from '../contexts/ThemeContext';
+
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 375;
 
 export default function HomeScreen() {
   const router = useRouter();
   const auth = useContext(AuthContext);
+  const theme = useContext(ThemeContext);
 
-  const userName = auth?.user?.name || "Usuario";
+  if (!theme || !auth) return null;
 
-  // Cierre de sesión
-  const handleLogout = async () => {
+  const { colors, isDark, themeMode, setThemeMode } = theme;
+  const userName = auth.user?.name || "Usuario";
+
+  const toggleTheme = () => {
+    if (themeMode === "light") setThemeMode("dark");
+    else if (themeMode === "dark") setThemeMode("auto");
+    else setThemeMode("light");
+  };
+
+  const getThemeIcon = () => {
+    if (themeMode === "auto") return "phone-portrait-outline";
+    return isDark ? "moon" : "sunny";
+  };
+
+  const handleLogout = () => {
     Alert.alert(
       'Cerrar sesión',
       '¿Estás seguro de cerrar sesión?',
@@ -31,15 +50,18 @@ export default function HomeScreen() {
           text: 'Salir',
           style: 'destructive',
           onPress: async () => {
-            await auth?.logout();
-            router.replace('/screens/login');
+            try {
+              await auth.logout();
+              router.replace('/screens/login');
+            } catch (error) {
+              console.error('Error al cerrar sesión:', error);
+            }
           },
         },
       ]
     );
   };
 
-  // Llamada de emergencia
   const handleEmergencyCall = () => {
     const phoneNumber = 'tel:911';
     Linking.openURL(phoneNumber).catch(() => {
@@ -47,345 +69,301 @@ export default function HomeScreen() {
     });
   };
 
+  const styles = createStyles(colors, isDark);
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={colors.background} 
+      />
       
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.avatarContainer}>
-              <Ionicons name="person" size={28} color="#FFF" />
+              <MaterialCommunityIcons name="account" size={isSmallDevice ? 20 : 24} color={colors.primary} />
             </View>
             <View>
-              <Text style={styles.welcomeText}>Bienvenido(a)</Text>
+              <Text style={styles.welcomeText}>Bienvenido</Text>
               <Text style={styles.userName}>{userName}</Text>
             </View>
           </View>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton} activeOpacity={0.7}>
-            <Ionicons name="log-out-outline" size={26} color="#FFF" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={toggleTheme} style={styles.iconButton} activeOpacity={0.7}>
+              <Ionicons name={getThemeIcon()} size={20} color={colors.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout} style={styles.iconButton} activeOpacity={0.7}>
+              <Ionicons name="log-out-outline" size={20} color={colors.icon} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Saludo */}
-        <View style={styles.greetingContainer}>
-          <Text style={styles.greetingTitle}>Tu sonrisa es nuestra prioridad</Text>
-          <Text style={styles.greetingSubtitle}>
-            Accede rápidamente a tus servicios
+        <View style={styles.welcomeCard}>
+          <Text style={styles.welcomeTitle}>Clínica Dental</Text>
+          <Text style={styles.welcomeSubtitle}>
+            Gestiona tus citas y tratamientos
           </Text>
         </View>
 
-        {/* Cards transparentes */}
-        <View style={styles.cardsContainer}>
-          {/* Card 1: Tratamientos */}
+        <View style={styles.servicesSection}>
+          <Text style={styles.sectionTitle}>Servicios</Text>
+          
           <TouchableOpacity 
-            style={styles.card} 
+            style={styles.serviceCard} 
             activeOpacity={0.7}
             onPress={() => router.push('/screens/tratamientos')}
           >
-            <View style={styles.cardIcon}>
-              <MaterialCommunityIcons name="tooth-outline" size={40} color="#FFF" />
+            <View style={styles.serviceIcon}>
+              <MaterialCommunityIcons 
+                name="tooth-outline" 
+                size={24} 
+                color={colors.primary} 
+              />
             </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Tratamientos</Text>
-              <Text style={styles.cardDescription}>
-                Visualiza el avance de cada tratamiento paso a paso
-              </Text>
+            <View style={styles.serviceContent}>
+              <Text style={styles.serviceTitle}>Tratamientos</Text>
+              <Text style={styles.serviceDescription}>Seguimiento de procedimientos</Text>
             </View>
-            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.8)" />
+            <Ionicons name="chevron-forward" size={20} color={colors.icon} />
           </TouchableOpacity>
 
-          {/* Card 2: Citas pendientes */}
           <TouchableOpacity 
-            style={styles.card} 
+            style={styles.serviceCard} 
             activeOpacity={0.7}
             onPress={() => router.push('/screens/citas')}
           >
-            <View style={styles.cardIcon}>
-              <Ionicons name="calendar-outline" size={40} color="#FFF" />
+            <View style={styles.serviceIcon}>
+              <Ionicons 
+                name="calendar-outline" 
+                size={24} 
+                color={colors.primary} 
+              />
             </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Citas pendientes</Text>
-              <Text style={styles.cardDescription}>
-                Consulta tus citas pasadas y próximas
-              </Text>
+            <View style={styles.serviceContent}>
+              <Text style={styles.serviceTitle}>Citas</Text>
+              <Text style={styles.serviceDescription}>Consulta tu agenda</Text>
             </View>
-            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.8)" />
+            <Ionicons name="chevron-forward" size={20} color={colors.icon} />
           </TouchableOpacity>
 
-          {/* Card 3: Historial de pagos */}
           <TouchableOpacity 
-            style={styles.card} 
+            style={styles.serviceCard} 
             activeOpacity={0.7}
             onPress={() => router.push('/screens/pagos')}
           >
-            <View style={styles.cardIcon}>
-              <MaterialCommunityIcons name="calculator" size={40} color="#FFF" />
+            <View style={styles.serviceIcon}>
+              <MaterialCommunityIcons 
+                name="credit-card-outline" 
+                size={24} 
+                color={colors.primary} 
+              />
             </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Historial de pagos</Text>
-              <Text style={styles.cardDescription}>
-                Revisa tus pagos realizados y estado de cuenta
-              </Text>
+            <View style={styles.serviceContent}>
+              <Text style={styles.serviceTitle}>Pagos</Text>
+              <Text style={styles.serviceDescription}>Historial financiero</Text>
             </View>
-            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.8)" />
+            <Ionicons name="chevron-forward" size={20} color={colors.icon} />
           </TouchableOpacity>
+        </View>
 
-          {/* Card de emergencia */}
+        <View style={styles.emergencySection}>
           <View style={styles.emergencyCard}>
             <View style={styles.emergencyHeader}>
               <View style={styles.emergencyIconContainer}>
-                <Ionicons name="warning" size={28} color="#FFF" />
+                <Ionicons name="call" size={22} color="#FFF" />
               </View>
-              <View style={styles.emergencyText}>
-                <Text style={styles.emergencyTitle}>¿Urgencia dental?</Text>
+              <View style={styles.emergencyContent}>
+                <Text style={styles.emergencyTitle}>Urgencias 24/7</Text>
                 <Text style={styles.emergencySubtitle}>
-                  Dolor intenso, fractura, inflamación o sangrado
+                  Atención inmediata disponible
                 </Text>
               </View>
             </View>
             <TouchableOpacity 
               style={styles.emergencyButton}
               onPress={handleEmergencyCall}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <Ionicons name="call" size={22} color="#FFF" />
-              <Text style={styles.emergencyButtonText}>Llamar ahora</Text>
+              <Text style={styles.emergencyButtonText}>Llamar Ahora</Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        <View style={styles.bottomSpace} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: isSmallDevice ? 40 : 50,
+    paddingBottom: 40,
+    paddingHorizontal: width * 0.05,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 24,
+    marginBottom: isSmallDevice ? 24 : 32,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
   },
   avatarContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    width: isSmallDevice ? 42 : 48,
+    height: isSmallDevice ? 42 : 48,
+    borderRadius: isSmallDevice ? 21 : 24,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   welcomeText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: isSmallDevice ? 12 : 13,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   userName: {
-    fontSize: 20,
-    color: '#FFF',
-    fontWeight: '700',
+    fontSize: isSmallDevice ? 16 : 18,
+    color: colors.text,
+    fontWeight: '600',
   },
-  logoutButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  greetingContainer: {
-    marginHorizontal: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 28,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-    borderBottomWidth: 5,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  greetingTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  greetingSubtitle: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.95)',
-    lineHeight: 22,
-  },
-  cardsContainer: {
-    paddingHorizontal: 24,
-  },
-  card: {
+  headerActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(0, 0, 0, 0.5)',
+    gap: 8,
   },
-  cardIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  iconButton: {
+    width: isSmallDevice ? 36 : 40,
+    height: isSmallDevice ? 36 : 40,
+    borderRadius: isSmallDevice ? 18 : 20,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderColor: colors.border,
   },
-  cardContent: {
-    flex: 1,
+  welcomeCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: isSmallDevice ? 20 : 24,
+    marginBottom: isSmallDevice ? 24 : 32,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFF',
+  welcomeTitle: {
+    fontSize: isSmallDevice ? 20 : 24,
+    fontWeight: '600',
+    color: colors.text,
     marginBottom: 6,
   },
-  cardDescription: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.95)',
-    lineHeight: 19,
+  welcomeSubtitle: {
+    fontSize: isSmallDevice ? 13 : 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
-  emergencyCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 18,
-    padding: 20,
-    marginTop: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(239, 68, 68, 0.5)',
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 8,
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(0, 0, 0, 0.5)',
+  servicesSection: {
+    marginBottom: isSmallDevice ? 20 : 24,
   },
-  emergencyHeader: {
+  sectionTitle: {
+    fontSize: isSmallDevice ? 16 : 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  serviceCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 18,
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: isSmallDevice ? 14 : 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  emergencyIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(239, 68, 68, 0.5)',
+  serviceIcon: {
+    width: isSmallDevice ? 44 : 48,
+    height: isSmallDevice ? 44 : 48,
+    borderRadius: isSmallDevice ? 22 : 24,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderColor: colors.border,
   },
-  emergencyText: {
+  serviceContent: {
+    flex: 1,
+  },
+  serviceTitle: {
+    fontSize: isSmallDevice ? 14 : 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 3,
+  },
+  serviceDescription: {
+    fontSize: isSmallDevice ? 12 : 13,
+    color: colors.textSecondary,
+  },
+  emergencySection: {
+    marginTop: isSmallDevice ? 8 : 12,
+  },
+  emergencyCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: isSmallDevice ? 16 : 18,
+    borderWidth: 2,
+    borderColor: colors.error,
+  },
+  emergencyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emergencyIconContainer: {
+    width: isSmallDevice ? 40 : 44,
+    height: isSmallDevice ? 40 : 44,
+    borderRadius: isSmallDevice ? 20 : 22,
+    backgroundColor: colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  emergencyContent: {
     flex: 1,
   },
   emergencyTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 6,
+    fontSize: isSmallDevice ? 14 : 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 3,
   },
   emergencySubtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.95)',
-    lineHeight: 19,
+    fontSize: isSmallDevice ? 12 : 13,
+    color: colors.textSecondary,
   },
   emergencyButton: {
-    flexDirection: 'row',
+    backgroundColor: colors.error,
+    paddingVertical: isSmallDevice ? 12 : 14,
+    borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(220, 38, 38, 0.95)',
-    paddingVertical: 16,
-    borderRadius: 14,
-    gap: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 10,
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(153, 27, 27, 0.9)',
   },
   emergencyButtonText: {
     color: '#FFF',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  bottomSpace: {
-    height: 0,
+    fontSize: isSmallDevice ? 14 : 15,
+    fontWeight: '600',
   },
 });

@@ -1,9 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
-  Alert,
-  Linking,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -11,381 +9,366 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
+  Modal,
 } from 'react-native';
-import { AuthContext } from '../../contexts/AuthContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
-export default function HomeScreen() {
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+
+export default function ExploreScreen() {
   const router = useRouter();
-  const auth = useContext(AuthContext);
+  const theme = useContext(ThemeContext);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Todos');
 
-  const userName = auth?.user?.name || "Usuario";
+  if (!theme) return null;
 
-  // Cierre de sesión
-  const handleLogout = async () => {
-    Alert.alert(
-      'Cerrar sesión',
-      '¿Estás seguro de cerrar sesión?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Salir',
-          style: 'destructive',
-          onPress: async () => {
-            await auth?.logout();
-            router.replace('/screens/login');
-          },
-        },
-      ]
-    );
-  };
+  const { colors, isDark } = theme;
 
-  // Llamada de emergencia
-  const handleEmergencyCall = () => {
-    const phoneNumber = 'tel:911';
-    Linking.openURL(phoneNumber).catch(() => {
-      Alert.alert('Error', 'No se pudo realizar la llamada');
-    });
-  };
+  const categories = [
+    { id: 'all', name: 'Todos', icon: 'grid-outline' },
+    { id: 'preventive', name: 'Preventivos', icon: 'shield-checkmark-outline' },
+    { id: 'aesthetic', name: 'Estéticos', icon: 'sparkles-outline' },
+    { id: 'restorative', name: 'Restaurativos', icon: 'build-outline' },
+    { id: 'emergency', name: 'Urgencias', icon: 'alert-circle-outline' },
+  ];
+
+  const services = [
+    { 
+      id: 1, 
+      name: 'Limpieza Dental', 
+      category: 'preventive',
+      description: 'Profilaxis profesional',
+      icon: 'water-outline',
+      price: 'Desde $500'
+    },
+    { 
+      id: 2, 
+      name: 'Blanqueamiento', 
+      category: 'aesthetic',
+      description: 'Tratamiento estético',
+      icon: 'sparkles-outline',
+      price: 'Desde $2,500'
+    },
+    { 
+      id: 3, 
+      name: 'Ortodoncia', 
+      category: 'aesthetic',
+      description: 'Alineación dental',
+      icon: 'grid-outline',
+      price: 'Consultar'
+    },
+    { 
+      id: 4, 
+      name: 'Endodoncia', 
+      category: 'restorative',
+      description: 'Tratamiento de conducto',
+      icon: 'medical-outline',
+      price: 'Desde $3,000'
+    },
+    { 
+      id: 5, 
+      name: 'Extracción', 
+      category: 'emergency',
+      description: 'Procedimiento quirúrgico',
+      icon: 'cut-outline',
+      price: 'Desde $800'
+    },
+    { 
+      id: 6, 
+      name: 'Implantes', 
+      category: 'restorative',
+      description: 'Reemplazo dental',
+      icon: 'fitness-outline',
+      price: 'Consultar'
+    },
+  ];
+
+  const filteredServices = selectedCategory === 'Todos' 
+    ? services 
+    : services.filter(s => s.category === categories.find(c => c.name === selectedCategory)?.id);
+
+  const styles = createStyles(colors, isDark);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={colors.background} 
+      />
       
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.avatarContainer}>
-              <Ionicons name="person" size={28} color="#FFF" />
-            </View>
-            <View>
-              <Text style={styles.welcomeText}>Bienvenido(a)</Text>
-              <Text style={styles.userName}>{userName}</Text>
-            </View>
+          <View>
+            <Text style={styles.headerTitle}>Servicios</Text>
+            <Text style={styles.headerSubtitle}>Explora nuestros tratamientos</Text>
           </View>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton} activeOpacity={0.7}>
-            <Ionicons name="log-out-outline" size={26} color="#FFF" />
+          <TouchableOpacity 
+            style={styles.filterButton}
+            activeOpacity={0.7}
+            onPress={() => setFilterModalVisible(true)}
+          >
+            <Ionicons name="options-outline" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
 
-        {/* Saludo */}
-        <View style={styles.greetingContainer}>
-          <Text style={styles.greetingTitle}>Tu sonrisa es nuestra prioridad</Text>
-          <Text style={styles.greetingSubtitle}>
-            Accede rápidamente a tus servicios
-          </Text>
+        <View style={styles.selectedFilterContainer}>
+          <View style={styles.selectedFilter}>
+            <Text style={styles.selectedFilterText}>{selectedCategory}</Text>
+          </View>
         </View>
 
-        {/* Cards transparentes */}
-        <View style={styles.cardsContainer}>
-          {/* Card 1: Tratamientos */}
-          <TouchableOpacity 
-            style={styles.card} 
-            activeOpacity={0.7}
-            onPress={() => router.push('/screens/tratamientos')}
-          >
-            <View style={styles.cardIcon}>
-              <MaterialCommunityIcons name="tooth-outline" size={40} color="#FFF" />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Tratamientos</Text>
-              <Text style={styles.cardDescription}>
-                Visualiza el avance de cada tratamiento paso a paso
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.8)" />
-          </TouchableOpacity>
-
-          {/* Card 2: Citas pendientes */}
-          <TouchableOpacity 
-            style={styles.card} 
-            activeOpacity={0.7}
-            onPress={() => router.push('/screens/citas')}
-          >
-            <View style={styles.cardIcon}>
-              <Ionicons name="calendar-outline" size={40} color="#FFF" />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Citas pendientes</Text>
-              <Text style={styles.cardDescription}>
-                Consulta tus citas pasadas y próximas
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.8)" />
-          </TouchableOpacity>
-
-          {/* Card 3: Historial de pagos */}
-          <TouchableOpacity 
-            style={styles.card} 
-            activeOpacity={0.7}
-            onPress={() => router.push('/screens/pagos')}
-          >
-            <View style={styles.cardIcon}>
-              <MaterialCommunityIcons name="calculator" size={40} color="#FFF" />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Historial de pagos</Text>
-              <Text style={styles.cardDescription}>
-                Revisa tus pagos realizados y estado de cuenta
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="rgba(255, 255, 255, 0.8)" />
-          </TouchableOpacity>
-
-          {/* Card de emergencia */}
-          <View style={styles.emergencyCard}>
-            <View style={styles.emergencyHeader}>
-              <View style={styles.emergencyIconContainer}>
-                <Ionicons name="warning" size={28} color="#FFF" />
-              </View>
-              <View style={styles.emergencyText}>
-                <Text style={styles.emergencyTitle}>¿Urgencia dental?</Text>
-                <Text style={styles.emergencySubtitle}>
-                  Dolor intenso, fractura, inflamación o sangrado
-                </Text>
-              </View>
-            </View>
+        <View style={styles.servicesContainer}>
+          {filteredServices.map((service) => (
             <TouchableOpacity 
-              style={styles.emergencyButton}
-              onPress={handleEmergencyCall}
+              key={service.id}
+              style={styles.serviceCard}
               activeOpacity={0.7}
             >
-              <Ionicons name="call" size={22} color="#FFF" />
-              <Text style={styles.emergencyButtonText}>Llamar ahora</Text>
+              <View style={styles.serviceIcon}>
+                <Ionicons name={service.icon as any} size={28} color={colors.primary} />
+              </View>
+              <View style={styles.serviceInfo}>
+                <Text style={styles.serviceName}>{service.name}</Text>
+                <Text style={styles.serviceDescription}>{service.description}</Text>
+                <Text style={styles.servicePrice}>{service.price}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.icon} />
             </TouchableOpacity>
-          </View>
+          ))}
         </View>
-
-        <View style={styles.bottomSpace} />
       </ScrollView>
+
+      <Modal
+        visible={filterModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setFilterModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filtrar por categoría</Text>
+              <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.categoriesContainer}>
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.categoryOption,
+                    selectedCategory === category.name && styles.categoryOptionActive
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setSelectedCategory(category.name);
+                    setFilterModalVisible(false);
+                  }}
+                >
+                  <View style={[
+                    styles.categoryIconContainer,
+                    selectedCategory === category.name && styles.categoryIconActive
+                  ]}>
+                    <Ionicons 
+                      name={category.icon as any} 
+                      size={22} 
+                      color={selectedCategory === category.name ? '#FFF' : colors.primary} 
+                    />
+                  </View>
+                  <Text style={[
+                    styles.categoryName,
+                    selectedCategory === category.name && styles.categoryNameActive
+                  ]}>
+                    {category.name}
+                  </Text>
+                  {selectedCategory === category.name && (
+                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: isSmallDevice ? 40 : 50,
+    paddingBottom: 100,
+    paddingHorizontal: width * 0.05,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 24,
+    marginBottom: isSmallDevice ? 20 : 24,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+  headerTitle: {
+    fontSize: isSmallDevice ? 24 : 28,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
   },
-  avatarContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+  headerSubtitle: {
+    fontSize: isSmallDevice ? 13 : 14,
+    color: colors.textSecondary,
   },
-  welcomeText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontWeight: '500',
-  },
-  userName: {
-    fontSize: 20,
-    color: '#FFF',
-    fontWeight: '700',
-  },
-  logoutButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+  filterButton: {
+    width: isSmallDevice ? 40 : 44,
+    height: isSmallDevice ? 40 : 44,
+    borderRadius: isSmallDevice ? 20 : 22,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  greetingContainer: {
-    marginHorizontal: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 28,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-    borderBottomWidth: 5,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  greetingTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  greetingSubtitle: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.95)',
-    lineHeight: 22,
-  },
-  cardsContainer: {
-    paddingHorizontal: 24,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  cardIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderColor: colors.border,
   },
-  cardContent: {
-    flex: 1,
+  selectedFilterContainer: {
+    marginBottom: isSmallDevice ? 16 : 20,
   },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 6,
+  selectedFilter: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.card,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
-  cardDescription: {
+  selectedFilterText: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.95)',
-    lineHeight: 19,
+    fontWeight: '600',
+    color: colors.primary,
   },
-  emergencyCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 18,
-    padding: 20,
-    marginTop: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(239, 68, 68, 0.5)',
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 8,
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(0, 0, 0, 0.5)',
+  servicesContainer: {
+    gap: 12,
   },
-  emergencyHeader: {
+  serviceCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 18,
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: isSmallDevice ? 14 : 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  emergencyIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(239, 68, 68, 0.5)',
+  serviceIcon: {
+    width: isSmallDevice ? 48 : 52,
+    height: isSmallDevice ? 48 : 52,
+    borderRadius: isSmallDevice ? 24 : 26,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderColor: colors.border,
   },
-  emergencyText: {
+  serviceInfo: {
     flex: 1,
   },
-  emergencyTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 6,
+  serviceName: {
+    fontSize: isSmallDevice ? 14 : 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 3,
   },
-  emergencySubtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.95)',
-    lineHeight: 19,
+  serviceDescription: {
+    fontSize: isSmallDevice ? 12 : 13,
+    color: colors.textSecondary,
+    marginBottom: 4,
   },
-  emergencyButton: {
+  servicePrice: {
+    fontSize: isSmallDevice ? 12 : 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  categoriesContainer: {
+    gap: 12,
+  },
+  categoryOption: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  categoryOptionActive: {
+    borderColor: colors.primary,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+  },
+  categoryIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: isDark ? colors.card : '#FFF',
+    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(220, 38, 38, 0.95)',
-    paddingVertical: 16,
-    borderRadius: 14,
-    gap: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 10,
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(153, 27, 27, 0.9)',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  emergencyButtonText: {
-    color: '#FFF',
-    fontSize: 17,
-    fontWeight: '700',
+  categoryIconActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  bottomSpace: {
-    height: 0,
+  categoryName: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  categoryNameActive: {
+    fontWeight: '600',
+    color: colors.text,
   },
 });
