@@ -1,26 +1,27 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  SafeAreaView,
-  StyleSheet,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
   ActivityIndicator,
   Alert,
-  ScrollView,
   Dimensions,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
 } from "react-native";
-import { useRouter } from "expo-router";
 import { AuthContext } from "../../contexts/AuthContext";
 import { ThemeContext } from "../contexts/ThemeContext";
-import { Ionicons } from "@expo/vector-icons";
-import { Linking } from "react-native";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import dentistImage from "../../assets/images/dentist.png";
 import logoImage from "../../assets/images/logo.png";
