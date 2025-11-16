@@ -63,7 +63,7 @@ export default function HomeScreen() {
   };
 
   const handleEmergencyCall = () => {
-    const phoneNumber = 'tel:911';
+    const phoneNumber = 'tel:771 333 9456';
     Linking.openURL(phoneNumber).catch(() => {
       Alert.alert('Error', 'No se pudo realizar la llamada');
     });

@@ -1,6 +1,6 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
-  Modal,
 } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 
@@ -20,75 +19,30 @@ const isSmallDevice = width < 375;
 export default function ExploreScreen() {
   const router = useRouter();
   const theme = useContext(ThemeContext);
-  const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
 
   if (!theme) return null;
 
   const { colors, isDark } = theme;
 
-  const categories = [
-    { id: 'all', name: 'Todos', icon: 'grid-outline' },
-    { id: 'preventive', name: 'Preventivos', icon: 'shield-checkmark-outline' },
-    { id: 'aesthetic', name: 'Estéticos', icon: 'sparkles-outline' },
-    { id: 'restorative', name: 'Restaurativos', icon: 'build-outline' },
-    { id: 'emergency', name: 'Urgencias', icon: 'alert-circle-outline' },
-  ];
+  // Navegar hacia atrás
+  const handleBack = () => {
+    router.push('/(tabs)');
+  };
 
-  const services = [
-    { 
-      id: 1, 
-      name: 'Limpieza Dental', 
-      category: 'preventive',
-      description: 'Profilaxis profesional',
-      icon: 'water-outline',
-      price: 'Desde $500'
-    },
-    { 
-      id: 2, 
-      name: 'Blanqueamiento', 
-      category: 'aesthetic',
-      description: 'Tratamiento estético',
-      icon: 'sparkles-outline',
-      price: 'Desde $2,500'
-    },
-    { 
-      id: 3, 
-      name: 'Ortodoncia', 
-      category: 'aesthetic',
-      description: 'Alineación dental',
-      icon: 'grid-outline',
-      price: 'Consultar'
-    },
-    { 
-      id: 4, 
-      name: 'Endodoncia', 
-      category: 'restorative',
-      description: 'Tratamiento de conducto',
-      icon: 'medical-outline',
-      price: 'Desde $3,000'
-    },
-    { 
-      id: 5, 
-      name: 'Extracción', 
-      category: 'emergency',
-      description: 'Procedimiento quirúrgico',
-      icon: 'cut-outline',
-      price: 'Desde $800'
-    },
-    { 
-      id: 6, 
-      name: 'Implantes', 
-      category: 'restorative',
-      description: 'Reemplazo dental',
-      icon: 'fitness-outline',
-      price: 'Consultar'
-    },
-  ];
+  // Navegar al detalle del tratamiento
+  const handleVerDetalle = () => {
+    router.push('./detalle-tratamientos');
+  };
 
-  const filteredServices = selectedCategory === 'Todos' 
-    ? services 
-    : services.filter(s => s.category === categories.find(c => c.name === selectedCategory)?.id);
+  // Tratamiento activo del paciente (luego vendrá del API)
+  const tratamiento = {
+    id: 1,
+    nombre: 'Ortodoncia',
+    descripcion: 'Tratamiento de alineación dental',
+    icon: 'medkit',
+    progreso: 35,
+    proximaCita: '20 Nov 2024',
+  };
 
   const styles = createStyles(colors, isDark);
 
@@ -105,104 +59,66 @@ export default function ExploreScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Servicios</Text>
-            <Text style={styles.headerSubtitle}>Explora nuestros tratamientos</Text>
-          </View>
           <TouchableOpacity 
-            style={styles.filterButton}
+            style={styles.backButton}
             activeOpacity={0.7}
-            onPress={() => setFilterModalVisible(true)}
+            onPress={handleBack}
           >
-            <Ionicons name="options-outline" size={20} color={colors.text} />
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.selectedFilterContainer}>
-          <View style={styles.selectedFilter}>
-            <Text style={styles.selectedFilterText}>{selectedCategory}</Text>
+          
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Mi Tratamiento</Text>
+            <Text style={styles.headerSubtitle}>Tratamiento activo</Text>
           </View>
         </View>
 
-        <View style={styles.servicesContainer}>
-          {filteredServices.map((service) => (
-            <TouchableOpacity 
-              key={service.id}
-              style={styles.serviceCard}
-              activeOpacity={0.7}
-            >
-              <View style={styles.serviceIcon}>
-                <Ionicons name={service.icon as any} size={28} color={colors.primary} />
-              </View>
-              <View style={styles.serviceInfo}>
-                <Text style={styles.serviceName}>{service.name}</Text>
-                <Text style={styles.serviceDescription}>{service.description}</Text>
-                <Text style={styles.servicePrice}>{service.price}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.icon} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-
-      <Modal
-        visible={filterModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setFilterModalVisible(false)}
-      >
         <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setFilterModalVisible(false)}
+          style={styles.tratamientoCard}
+          activeOpacity={0.7}
+          onPress={handleVerDetalle}
         >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filtrar por categoría</Text>
-              <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
+          <View style={styles.cardHeader}>
+            <View style={styles.iconBox}>
+              <Ionicons name={tratamiento.icon as any} size={32} color={colors.primary} />
             </View>
+            <View style={styles.cardHeaderInfo}>
+              <Text style={styles.tratamientoNombre}>{tratamiento.nombre}</Text>
+              <Text style={styles.tratamientoDescripcion}>{tratamiento.descripcion}</Text>
+            </View>
+          </View>
 
-            <View style={styles.categoriesContainer}>
-              {categories.map((category) => (
-                <TouchableOpacity
-                  key={category.id}
-                  style={[
-                    styles.categoryOption,
-                    selectedCategory === category.name && styles.categoryOptionActive
-                  ]}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setSelectedCategory(category.name);
-                    setFilterModalVisible(false);
-                  }}
-                >
-                  <View style={[
-                    styles.categoryIconContainer,
-                    selectedCategory === category.name && styles.categoryIconActive
-                  ]}>
-                    <Ionicons 
-                      name={category.icon as any} 
-                      size={22} 
-                      color={selectedCategory === category.name ? '#FFF' : colors.primary} 
-                    />
-                  </View>
-                  <Text style={[
-                    styles.categoryName,
-                    selectedCategory === category.name && styles.categoryNameActive
-                  ]}>
-                    {category.name}
-                  </Text>
-                  {selectedCategory === category.name && (
-                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>Progreso</Text>
+              <Text style={styles.progressPercent}>{tratamiento.progreso}%</Text>
             </View>
+            <View style={styles.progressBarContainer}>
+              <View style={[styles.progressBar, { width: `${tratamiento.progreso}%` }]} />
+            </View>
+          </View>
+
+          <View style={styles.citaSection}>
+            <View style={styles.citaIcon}>
+              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+            </View>
+            <View style={styles.citaInfo}>
+              <Text style={styles.citaLabel}>Próxima cita</Text>
+              <Text style={styles.citaFecha}>{tratamiento.proximaCita}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.icon} />
           </View>
         </TouchableOpacity>
-      </Modal>
+
+        <View style={styles.infoCard}>
+          <View style={styles.infoIcon}>
+            <Ionicons name="information-circle" size={24} color={colors.primary} />
+          </View>
+          <Text style={styles.infoText}>
+            Toca la tarjeta para ver todos los detalles de tu tratamiento, historial de sesiones e información financiera.
+          </Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -222,9 +138,23 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: isSmallDevice ? 20 : 24,
+    marginBottom: isSmallDevice ? 24 : 28,
+  },
+  backButton: {
+    width: isSmallDevice ? 40 : 44,
+    height: isSmallDevice ? 40 : 44,
+    borderRadius: isSmallDevice ? 20 : 22,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderBottomWidth: 3,
+  },
+  headerContent: {
+    flex: 1,
+    marginLeft: 12,
   },
   headerTitle: {
     fontSize: isSmallDevice ? 24 : 28,
@@ -236,139 +166,132 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     fontSize: isSmallDevice ? 13 : 14,
     color: colors.textSecondary,
   },
-  filterButton: {
-    width: isSmallDevice ? 40 : 44,
-    height: isSmallDevice ? 40 : 44,
-    borderRadius: isSmallDevice ? 20 : 22,
+  tratamientoCard: {
     backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 16,
+    padding: isSmallDevice ? 18 : 24,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  selectedFilterContainer: {
+    borderBottomWidth: 3,
     marginBottom: isSmallDevice ? 16 : 20,
   },
-  selectedFilter: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.card,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  selectedFilterText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  servicesContainer: {
-    gap: 12,
-  },
-  serviceCard: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: isSmallDevice ? 14 : 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginBottom: 20,
   },
-  serviceIcon: {
-    width: isSmallDevice ? 48 : 52,
-    height: isSmallDevice ? 48 : 52,
-    borderRadius: isSmallDevice ? 24 : 26,
+  iconBox: {
+    width: isSmallDevice ? 60 : 70,
+    height: isSmallDevice ? 60 : 70,
+    borderRadius: isSmallDevice ? 30 : 35,
     backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginRight: 16,
     borderWidth: 1,
     borderColor: colors.border,
+    borderBottomWidth: 3,
   },
-  serviceInfo: {
+  cardHeaderInfo: {
     flex: 1,
   },
-  serviceName: {
-    fontSize: isSmallDevice ? 14 : 15,
+  tratamientoNombre: {
+    fontSize: isSmallDevice ? 18 : 20,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 3,
+    marginBottom: 6,
   },
-  serviceDescription: {
-    fontSize: isSmallDevice ? 12 : 13,
+  tratamientoDescripcion: {
+    fontSize: isSmallDevice ? 13 : 14,
     color: colors.textSecondary,
-    marginBottom: 4,
+    lineHeight: 20,
   },
-  servicePrice: {
-    fontSize: isSmallDevice ? 12 : 13,
-    fontWeight: '600',
-    color: colors.primary,
+  progressSection: {
+    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-    paddingHorizontal: 20,
-    maxHeight: '70%',
-  },
-  modalHeader: {
+  progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 10,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
+  progressLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
-  categoriesContainer: {
-    gap: 12,
+  progressPercent: {
+    fontSize: isSmallDevice ? 16 : 18,
+    fontWeight: '700',
+    color: colors.primary,
   },
-  categoryOption: {
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 4,
+  },
+  citaSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  categoryOptionActive: {
-    borderColor: colors.primary,
+  citaIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
-  },
-  categoryIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: isDark ? colors.card : '#FFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  categoryIconActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  categoryName: {
+  citaInfo: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.text,
   },
-  categoryNameActive: {
+  citaLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 3,
+  },
+  citaFecha: {
+    fontSize: isSmallDevice ? 14 : 15,
     fontWeight: '600',
     color: colors.text,
+  },
+  infoCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: isSmallDevice ? 14 : 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderBottomWidth: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: isSmallDevice ? 12 : 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
 });
