@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,29 @@ import {
   SafeAreaView,
   StatusBar,
   TextInput,
+  Dimensions,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { ThemeContext } from '../contexts/ThemeContext';
+
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 375;
 
 export default function CitasScreen() {
   const router = useRouter();
+  const theme = useContext(ThemeContext);
   const [selectedFilter, setSelectedFilter] = useState('Todas');
   const [searchQuery, setSearchQuery] = useState('');
+
+  if (!theme) return null;
+
+  const { colors, isDark } = theme;
+
+  // Navegar hacia atrás
+  const handleBack = () => {
+    router.push('/(tabs)');
+  };
 
   const citas = [
     {
@@ -94,26 +109,13 @@ export default function CitasScreen() {
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'completada':
-        return 'rgba(34, 197, 94, 0.3)';
+        return '#22C55E';
       case 'pendiente':
-        return 'rgba(251, 191, 36, 0.3)';
+        return '#FBBF24';
       case 'cancelada':
-        return 'rgba(239, 68, 68, 0.3)';
+        return '#EF4444';
       default:
-        return 'rgba(0, 0, 0, 0.3)';
-    }
-  };
-
-  const getEstadoBorderColor = (estado: string) => {
-    switch (estado) {
-      case 'completada':
-        return 'rgba(34, 197, 94, 0.5)';
-      case 'pendiente':
-        return 'rgba(251, 191, 36, 0.5)';
-      case 'cancelada':
-        return 'rgba(239, 68, 68, 0.5)';
-      default:
-        return 'rgba(255, 255, 255, 0.25)';
+        return colors.textSecondary;
     }
   };
 
@@ -130,51 +132,70 @@ export default function CitasScreen() {
     }
   };
 
+  const styles = createStyles(colors, isDark);
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={colors.background} 
+      />
       
       <ScrollView 
-        style={styles.scrollView} 
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)')} style={styles.backButton} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={26} color="#FFF" />
+          <TouchableOpacity 
+            style={styles.backButton}
+            activeOpacity={0.7}
+            onPress={handleBack}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Mis Citas</Text>
+          
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Mis Citas</Text>
+            <Text style={styles.headerSubtitle}>Gestiona tus consultas</Text>
+          </View>
+          
           <View style={styles.placeholder} />
         </View>
 
         {/* Búsqueda */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={20} color="rgba(255, 255, 255, 0.7)" />
+            <Ionicons name="search" size={20} color={colors.icon} />
             <TextInput
               style={styles.searchInput}
               placeholder="Buscar cita..."
-              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+              placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-                <Ionicons name="close-circle" size={20} color="rgba(255, 255, 255, 0.7)" />
+                <Ionicons name="close-circle" size={20} color={colors.icon} />
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         {/* Filtros */}
-        <View style={styles.filtersContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.filtersContainer}
+          contentContainerStyle={styles.filtersContent}
+        >
           {filtros.map((filtro) => (
             <TouchableOpacity
               key={filtro}
               style={[
-                styles.filterButton,
-                selectedFilter === filtro && styles.filterButtonActive,
+                styles.filterChip,
+                selectedFilter === filtro && styles.filterChipActive,
               ]}
               onPress={() => setSelectedFilter(filtro)}
               activeOpacity={0.7}
@@ -187,107 +208,102 @@ export default function CitasScreen() {
               >
                 {filtro}
               </Text>
-              {selectedFilter === filtro && (
-                <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
-              )}
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
 
         {/* Citas */}
-        <View style={styles.section}>
+        <View style={styles.citasContainer}>
           {citasFiltradas.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="calendar-outline" size={64} color="rgba(255, 255, 255, 0.4)" />
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="calendar-outline" size={48} color={colors.icon} />
+              </View>
               <Text style={styles.emptyText}>No hay citas</Text>
+              <Text style={styles.emptySubtext}>Las citas aparecerán aquí</Text>
             </View>
           ) : (
             citasFiltradas.map((cita) => (
-              <View 
+              <TouchableOpacity 
                 key={cita.id} 
-                style={[
-                  styles.citaCard,
-                  { borderColor: getEstadoBorderColor(cita.estado) }
-                ]}
+                style={styles.citaCard}
+                activeOpacity={0.7}
+                onPress={() => router.push('/screens/detalle-cita')}
               >
                 {/* Header de la cita */}
                 <View style={styles.citaHeader}>
-                  <View style={styles.citaHeaderLeft}>
-                    <View style={styles.iconBox}>
-                      <Ionicons name="calendar" size={24} color="#FFF" />
-                    </View>
-                    <View style={styles.citaHeaderInfo}>
-                      <Text style={styles.citaTitulo}>{cita.titulo}</Text>
-                      <Text style={styles.citaFecha}>{cita.fecha}</Text>
-                      <Text style={styles.citaHora}>{cita.hora}</Text>
+                  <View style={styles.iconContainer}>
+                    <Ionicons name="calendar" size={24} color={colors.primary} />
+                  </View>
+                  
+                  <View style={styles.citaHeaderInfo}>
+                    <Text style={styles.citaTitulo}>{cita.titulo}</Text>
+                    <View style={styles.fechaHoraRow}>
+                      <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+                      <Text style={styles.citaFecha}>{cita.fecha} • {cita.hora}</Text>
                     </View>
                   </View>
-                  <View 
-                    style={[
-                      styles.estadoBadge,
-                      { 
-                        backgroundColor: getEstadoColor(cita.estado),
-                        borderColor: getEstadoBorderColor(cita.estado)
-                      }
-                    ]}
-                  >
+                  
+                  <View style={[styles.estadoBadge, { backgroundColor: getEstadoColor(cita.estado) }]}>
                     <Text style={styles.estadoText}>{getEstadoTexto(cita.estado)}</Text>
                   </View>
                 </View>
 
-                {/* Info de la cita */}
-                <View style={styles.citaInfo}>
+                {/* Info principal */}
+                <View style={styles.infoSection}>
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Paciente:</Text>
-                    <Text style={styles.infoValue}>{cita.paciente}</Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Edad:</Text>
-                    <Text style={styles.infoValue}>{cita.edad} años</Text>
-                  </View>
-                  <View style={styles.infoRow}>
+                    <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
                     <Text style={styles.infoLabel}>Odontólogo:</Text>
                     <Text style={styles.infoValue}>{cita.odontologo}</Text>
                   </View>
+                  
                   <View style={styles.infoRow}>
+                    <Ionicons name="medical-outline" size={16} color={colors.textSecondary} />
                     <Text style={styles.infoLabel}>Tratamiento:</Text>
                     <Text style={styles.infoValue}>{cita.tratamiento}</Text>
                   </View>
                 </View>
 
-                {/* Detalles adicionales */}
-                <View style={styles.detallesRow}>
-                  <View style={styles.detalleBox}>
-                    <Ionicons name="time-outline" size={16} color="rgba(255, 255, 255, 0.8)" />
-                    <Text style={styles.detalleText}>{cita.duracion}</Text>
+                {/* Detalles rápidos */}
+                <View style={styles.quickDetails}>
+                  <View style={styles.detailItem}>
+                    <Ionicons name="time-outline" size={16} color={colors.icon} />
+                    <Text style={styles.detailText}>{cita.duracion}</Text>
                   </View>
-                  <View style={styles.detalleBox}>
-                    <Ionicons name="cash-outline" size={16} color="rgba(255, 255, 255, 0.8)" />
-                    <Text style={styles.detalleText}>{cita.pago}</Text>
+                  
+                  <View style={styles.detailDivider} />
+                  
+                  <View style={styles.detailItem}>
+                    <Ionicons name="cash-outline" size={16} color={colors.icon} />
+                    <Text style={styles.detailText}>{cita.monto}</Text>
                   </View>
-                  <View style={styles.detalleBox}>
-                    <Text style={styles.detalleText}>{cita.monto}</Text>
+                  
+                  <View style={styles.detailDivider} />
+                  
+                  <View style={styles.detailItem}>
+                    <Text style={[styles.detailText, { color: cita.pago === 'Pagado' ? '#22C55E' : colors.textSecondary }]}>
+                      {cita.pago}
+                    </Text>
                   </View>
                 </View>
 
-                {/* Notas clínicas */}
+                {/* Notas */}
                 {cita.notas && (
                   <View style={styles.notasContainer}>
-                    <Text style={styles.notasLabel}>Notas clínicas:</Text>
-                    <Text style={styles.notasText}>{cita.notas}</Text>
+                    <View style={styles.notasHeader}>
+                      <Ionicons name="document-text-outline" size={14} color={colors.textSecondary} />
+                      <Text style={styles.notasLabel}>Notas:</Text>
+                    </View>
+                    <Text style={styles.notasText} numberOfLines={2}>{cita.notas}</Text>
                   </View>
                 )}
 
-                {/* Botón ver detalles */}
-                <TouchableOpacity 
-                  style={styles.verDetallesButton}
-                  onPress={() => router.push('/screens/detalle-cita')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.verDetallesText}>Ver Detalles Completos</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#FFF" />
-                </TouchableOpacity>
-              </View>
+                {/* Ver más */}
+                <View style={styles.verMasContainer}>
+                  <Text style={styles.verMasText}>Ver detalles completos</Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
             ))
           )}
         </View>
@@ -296,249 +312,263 @@ export default function CitasScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: isSmallDevice ? 40 : 50,
+    paddingBottom: 100,
+    paddingHorizontal: width * 0.05,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 24,
+    marginBottom: isSmallDevice ? 20 : 24,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    width: isSmallDevice ? 40 : 44,
+    height: isSmallDevice ? 40 : 44,
+    borderRadius: isSmallDevice ? 20 : 22,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  headerContent: {
+    flex: 1,
+    marginLeft: 12,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#FFF',
+    fontSize: isSmallDevice ? 24 : 28,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: isSmallDevice ? 13 : 14,
+    color: colors.textSecondary,
   },
   placeholder: {
-    width: 44,
+    width: isSmallDevice ? 40 : 44,
   },
   searchContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 14,
+    backgroundColor: colors.card,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    paddingVertical: isSmallDevice ? 10 : 12,
+    borderWidth: 1,
+    borderColor: colors.border,
     gap: 10,
   },
   searchInput: {
     flex: 1,
-    color: '#FFF',
+    color: colors.text,
     fontSize: 15,
   },
   filtersContainer: {
-    paddingHorizontal: 24,
     marginBottom: 20,
-    gap: 12,
   },
-  filterButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.3)',
+  filtersContent: {
+    gap: 10,
+    paddingRight: 20,
   },
-  filterButtonActive: {
-    backgroundColor: '#FFF',
-    borderColor: '#FFF',
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.15)',
+  filterChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filterChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: colors.text,
   },
   filterTextActive: {
-    color: '#2563EB',
-    fontWeight: '700',
+    color: '#FFF',
   },
-  section: {
-    paddingHorizontal: 24,
+  citasContainer: {
+    gap: 16,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 80,
+    paddingVertical: 60,
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 16,
+    color: colors.text,
+    marginBottom: 6,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   citaCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: isSmallDevice ? 16 : 18,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   citaHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 16,
   },
-  citaHeaderLeft: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  iconBox: {
+  iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: 24,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderColor: colors.border,
   },
   citaHeaderInfo: {
     flex: 1,
   },
   citaTitulo: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFF',
+    fontSize: isSmallDevice ? 16 : 17,
+    fontWeight: '600',
+    color: colors.text,
     marginBottom: 4,
+  },
+  fechaHoraRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   citaFecha: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.85)',
-    marginBottom: 2,
-  },
-  citaHora: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: colors.textSecondary,
   },
   estadoBadge: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: 12,
-    borderWidth: 2,
+    marginLeft: 8,
   },
   estadoText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#FFF',
+    textTransform: 'uppercase',
   },
-  citaInfo: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  infoSection: {
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
-    gap: 8,
+    gap: 10,
   },
   infoRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   infoLabel: {
     fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.7)',
-    width: 100,
+    fontWeight: '500',
+    color: colors.textSecondary,
   },
   infoValue: {
     flex: 1,
     fontSize: 13,
-    color: '#FFF',
+    color: colors.text,
     fontWeight: '500',
   },
-  detallesRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 12,
-  },
-  detalleBox: {
-    flex: 1,
+  quickDetails: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    gap: 6,
-  },
-  detalleText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
-  },
-  notasContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
   },
+  detailItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  detailDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: colors.border,
+  },
+  detailText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  notasContainer: {
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  notasHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
   notasLabel: {
     fontSize: 12,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 6,
+    fontWeight: '600',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
   },
   notasText: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.95)',
+    color: colors.text,
     lineHeight: 18,
   },
-  verDetallesButton: {
+  verMasContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: 6,
   },
-  verDetallesText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFF',
+  verMasText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });

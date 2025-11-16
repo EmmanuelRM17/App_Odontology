@@ -27,6 +27,11 @@ export default function ExploreScreen() {
 
   const { colors, isDark } = theme;
 
+  // Navegar hacia atrás
+  const handleBack = () => {
+    router.push('/(tabs)');
+  };
+
   const categories = [
     { id: 'all', name: 'Todos', icon: 'grid-outline' },
     { id: 'preventive', name: 'Preventivos', icon: 'shield-checkmark-outline' },
@@ -105,10 +110,19 @@ export default function ExploreScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Servicios</Text>
+          <TouchableOpacity 
+            style={styles.backButton}
+            activeOpacity={0.7}
+            onPress={handleBack}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
+          </TouchableOpacity>
+          
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Tratamientos</Text>
             <Text style={styles.headerSubtitle}>Explora nuestros tratamientos</Text>
           </View>
+          
           <TouchableOpacity 
             style={styles.filterButton}
             activeOpacity={0.7}
@@ -225,6 +239,20 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: isSmallDevice ? 20 : 24,
+  },
+  backButton: {
+    width: isSmallDevice ? 40 : 44,
+    height: isSmallDevice ? 40 : 44,
+    borderRadius: isSmallDevice ? 20 : 22,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  headerContent: {
+    flex: 1,
+    marginLeft: 12,
   },
   headerTitle: {
     fontSize: isSmallDevice ? 24 : 28,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -7,250 +7,689 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Dimensions,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { ThemeContext } from '../contexts/ThemeContext';
+
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 375;
 
 export default function PagosScreen() {
   const router = useRouter();
-  const [selectedFecha, setSelectedFecha] = useState('Fecha');
-  const [selectedEstado, setSelectedEstado] = useState('Estado');
+  const theme = useContext(ThemeContext);
+  const [selectedFecha, setSelectedFecha] = useState('Todos');
+  const [selectedEstado, setSelectedEstado] = useState('Todos');
+  const [selectedMetodo, setSelectedMetodo] = useState('Todos');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<'fecha' | 'estado' | 'metodo'>('fecha');
+
+  if (!theme) return null;
+
+  const { colors, isDark } = theme;
+
+  // Navegar hacia atrás
+  const handleBack = () => {
+    router.push('/(tabs)');
+  };
 
   const pagos = [
     {
       id: 1,
       fecha: '24 de septiembre del 2025',
+      mes: 'septiembre',
       cita: 'Ortodoncia - Ajuste de brackets',
-      monto: '$400 mxn',
+      monto: 400,
       metodo: 'Transferencia',
       estado: 'Pagado',
       referencia: 'RC-0924-1034',
     },
+    {
+      id: 2,
+      fecha: '15 de agosto del 2025',
+      mes: 'agosto',
+      cita: 'Limpieza dental',
+      monto: 600,
+      metodo: 'Efectivo',
+      estado: 'Pagado',
+      referencia: 'RC-0824-0842',
+    },
+    {
+      id: 3,
+      fecha: '10 de julio del 2025',
+      mes: 'julio',
+      cita: 'Endodoncia',
+      monto: 3000,
+      metodo: 'Tarjeta',
+      estado: 'Pendiente',
+      referencia: 'RC-0724-0523',
+    },
+    {
+      id: 4,
+      fecha: '05 de junio del 2025',
+      mes: 'junio',
+      cita: 'Blanqueamiento dental',
+      monto: 2500,
+      metodo: 'Transferencia',
+      estado: 'Pagado',
+      referencia: 'RC-0624-0312',
+    },
+    {
+      id: 5,
+      fecha: '20 de mayo del 2025',
+      mes: 'mayo',
+      cita: 'Extracción muela',
+      monto: 800,
+      metodo: 'Efectivo',
+      estado: 'Pendiente',
+      referencia: 'RC-0524-0789',
+    },
   ];
+
+  const filtrosOpcionesMap = {
+    fecha: ['Todos', 'Este mes', 'Mes anterior', 'Últimos 3 meses', 'Últimos 6 meses'],
+    estado: ['Todos', 'Pagado', 'Pendiente'],
+    metodo: ['Todos', 'Efectivo', 'Tarjeta', 'Transferencia'],
+  };
+
+  // Filtrar pagos
+  const pagosFiltrados = pagos.filter(pago => {
+    // Filtro por estado
+    if (selectedEstado !== 'Todos' && pago.estado !== selectedEstado) {
+      return false;
+    }
+
+    // Filtro por método
+    if (selectedMetodo !== 'Todos' && pago.metodo !== selectedMetodo) {
+      return false;
+    }
+
+    // Filtro por fecha
+    if (selectedFecha !== 'Todos') {
+      const mesesActuales = ['septiembre', 'agosto', 'julio', 'junio', 'mayo', 'abril'];
+      const mesActual = 'septiembre';
+      const mesAnterior = 'agosto';
+      
+      if (selectedFecha === 'Este mes' && pago.mes !== mesActual) {
+        return false;
+      }
+      if (selectedFecha === 'Mes anterior' && pago.mes !== mesAnterior) {
+        return false;
+      }
+      if (selectedFecha === 'Últimos 3 meses') {
+        const ultimos3 = ['septiembre', 'agosto', 'julio'];
+        if (!ultimos3.includes(pago.mes)) return false;
+      }
+      if (selectedFecha === 'Últimos 6 meses') {
+        const ultimos6 = ['septiembre', 'agosto', 'julio', 'junio', 'mayo', 'abril'];
+        if (!ultimos6.includes(pago.mes)) return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Calcular totales
+  const totalPagado = pagosFiltrados
+    .filter(p => p.estado === 'Pagado')
+    .reduce((sum, p) => sum + p.monto, 0);
+  
+  const totalPendiente = pagosFiltrados
+    .filter(p => p.estado === 'Pendiente')
+    .reduce((sum, p) => sum + p.monto, 0);
+
+  const getEstadoColor = (estado: string) => {
+    return estado === 'Pagado' ? '#22C55E' : '#FBBF24';
+  };
+
+  // Abrir modal de filtros
+  const openFilterModal = (type: 'fecha' | 'estado' | 'metodo') => {
+    setModalType(type);
+    setModalVisible(true);
+  };
+
+  // Seleccionar filtro
+  const selectFilter = (value: string) => {
+    if (modalType === 'fecha') setSelectedFecha(value);
+    if (modalType === 'estado') setSelectedEstado(value);
+    if (modalType === 'metodo') setSelectedMetodo(value);
+    setModalVisible(false);
+  };
+
+  // Limpiar todos los filtros
+  const clearFilters = () => {
+    setSelectedFecha('Todos');
+    setSelectedEstado('Todos');
+    setSelectedMetodo('Todos');
+  };
+
+  const hasActiveFilters = selectedFecha !== 'Todos' || selectedEstado !== 'Todos' || selectedMetodo !== 'Todos';
+
+  const styles = createStyles(colors, isDark);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={colors.background} 
+      />
       
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color="#000" />
-        </TouchableOpacity>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Historial de pagos</Text>
-          <Text style={styles.headerSubtitle}>Consulta tus pagos realizados y pendientes</Text>
-        </View>
-      </View>
-
-      <View style={styles.filtersContainer}>
-        <TouchableOpacity style={styles.filterDropdown}>
-          <Text style={styles.filterDropdownText}>Fecha</Text>
-          <Ionicons name="chevron-down" size={20} color="#000" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.filterDropdown}>
-          <Text style={styles.filterDropdownText}>Estado</Text>
-          <Ionicons name="chevron-down" size={20} color="#000" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.sectionHeader}>
-          <Ionicons name="card-outline" size={24} color="#000" />
-          <Text style={styles.sectionTitle}>Pagos Realizados:</Text>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            activeOpacity={0.7}
+            onPress={handleBack}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
+          </TouchableOpacity>
+          
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Historial de Pagos</Text>
+            <Text style={styles.headerSubtitle}>Consulta tus pagos</Text>
+          </View>
+          
+          <View style={styles.placeholder} />
         </View>
 
-        {pagos.map((pago) => (
-          <View key={pago.id} style={styles.pagoCard}>
-            <View style={styles.pagoRow}>
-              <Text style={styles.pagoLabel}>Fecha:</Text>
-              <View style={styles.pagoValue}>
-                <Text style={styles.pagoValueText}>{pago.fecha}</Text>
-              </View>
-            </View>
+        {/* Filtros */}
+        <View style={styles.filtersContainer}>
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedFecha !== 'Todos' && styles.filterButtonActive]}
+            activeOpacity={0.7}
+            onPress={() => openFilterModal('fecha')}
+          >
+            <Text style={[styles.filterText, selectedFecha !== 'Todos' && styles.filterTextActive]}>
+              {selectedFecha}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={selectedFecha !== 'Todos' ? colors.primary : colors.icon} />
+          </TouchableOpacity>
 
-            <View style={styles.pagoRow}>
-              <Text style={styles.pagoLabel}>Cita:</Text>
-              <View style={styles.pagoValue}>
-                <Text style={styles.pagoValueText}>{pago.cita}</Text>
-              </View>
-            </View>
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedEstado !== 'Todos' && styles.filterButtonActive]}
+            activeOpacity={0.7}
+            onPress={() => openFilterModal('estado')}
+          >
+            <Text style={[styles.filterText, selectedEstado !== 'Todos' && styles.filterTextActive]}>
+              {selectedEstado}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={selectedEstado !== 'Todos' ? colors.primary : colors.icon} />
+          </TouchableOpacity>
 
-            <View style={styles.pagoRowDouble}>
-              <View style={styles.pagoRowHalf}>
-                <Text style={styles.pagoLabel}>Monto:</Text>
-                <View style={styles.pagoValueSmall}>
-                  <Text style={styles.pagoValueText}>{pago.monto}</Text>
-                </View>
-              </View>
-              <View style={styles.pagoRowHalf}>
-                <Text style={styles.pagoLabel}>Estado:</Text>
-                <View style={styles.estadoBadge}>
-                  <Text style={styles.estadoText}>{pago.estado}</Text>
-                </View>
-              </View>
-            </View>
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedMetodo !== 'Todos' && styles.filterButtonActive]}
+            activeOpacity={0.7}
+            onPress={() => openFilterModal('metodo')}
+          >
+            <Text style={[styles.filterText, selectedMetodo !== 'Todos' && styles.filterTextActive]}>
+              {selectedMetodo}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={selectedMetodo !== 'Todos' ? colors.primary : colors.icon} />
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.pagoRow}>
-              <Text style={styles.pagoLabel}>Metodo:</Text>
-              <View style={styles.pagoValueSmall}>
-                <Text style={styles.pagoValueText}>{pago.metodo}</Text>
-              </View>
-            </View>
+        {/* Limpiar filtros */}
+        {hasActiveFilters && (
+          <TouchableOpacity 
+            style={styles.clearButton}
+            activeOpacity={0.7}
+            onPress={clearFilters}
+          >
+            <Ionicons name="close-circle" size={18} color={colors.primary} />
+            <Text style={styles.clearText}>Limpiar filtros</Text>
+          </TouchableOpacity>
+        )}
 
-            <View style={styles.pagoRow}>
-              <Text style={styles.pagoLabel}>Referencia:</Text>
-              <View style={styles.pagoValue}>
-                <Text style={styles.pagoValueText}>{pago.referencia}</Text>
-              </View>
+        {/* Resumen */}
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Total Pagado</Text>
+              <Text style={styles.summaryValue}>${totalPagado.toLocaleString()}</Text>
+            </View>
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Pendiente</Text>
+              <Text style={[styles.summaryValue, { color: '#FBBF24' }]}>
+                ${totalPendiente.toLocaleString()}
+              </Text>
             </View>
           </View>
-        ))}
-
-        <View style={styles.separatorContainer}>
-          <Ionicons name="chevron-down" size={32} color="#000" />
         </View>
 
-        <View style={styles.bottomSpace} />
+        {/* Section Header */}
+        <View style={styles.sectionHeader}>
+          <Ionicons name="receipt-outline" size={20} color={colors.text} />
+          <Text style={styles.sectionTitle}>Pagos ({pagosFiltrados.length})</Text>
+        </View>
+
+        {/* Pagos List */}
+        <View style={styles.pagosContainer}>
+          {pagosFiltrados.length === 0 ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="receipt-outline" size={48} color={colors.icon} />
+              </View>
+              <Text style={styles.emptyText}>No hay pagos</Text>
+              <Text style={styles.emptySubtext}>No se encontraron pagos con los filtros aplicados</Text>
+            </View>
+          ) : (
+            pagosFiltrados.map((pago) => (
+              <TouchableOpacity 
+                key={pago.id} 
+                style={styles.pagoCard}
+                activeOpacity={0.7}
+              >
+                {/* Header */}
+                <View style={styles.pagoHeader}>
+                  <View style={styles.iconContainer}>
+                    <Ionicons name="card-outline" size={24} color={colors.primary} />
+                  </View>
+                  
+                  <View style={styles.pagoHeaderInfo}>
+                    <Text style={styles.pagoCita}>{pago.cita}</Text>
+                    <View style={styles.fechaRow}>
+                      <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
+                      <Text style={styles.pagoFecha}>{pago.fecha}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={[styles.estadoBadge, { backgroundColor: getEstadoColor(pago.estado) }]}>
+                    <Text style={styles.estadoText}>{pago.estado}</Text>
+                  </View>
+                </View>
+
+                {/* Info */}
+                <View style={styles.infoSection}>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Monto:</Text>
+                    <Text style={styles.infoValue}>${pago.monto.toLocaleString()} MXN</Text>
+                  </View>
+                  
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Método:</Text>
+                    <Text style={styles.infoValue}>{pago.metodo}</Text>
+                  </View>
+                  
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Referencia:</Text>
+                    <Text style={styles.infoValue}>{pago.referencia}</Text>
+                  </View>
+                </View>
+
+                {/* Ver más */}
+                <View style={styles.verMasContainer}>
+                  <Text style={styles.verMasText}>Ver recibo</Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
       </ScrollView>
+
+      {/* Modal de filtros */}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Filtrar por {modalType === 'fecha' ? 'Fecha' : modalType === 'estado' ? 'Estado' : 'Método'}
+              </Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.optionsContainer}>
+              {filtrosOpcionesMap[modalType].map((opcion) => {
+                const isSelected = 
+                  (modalType === 'fecha' && opcion === selectedFecha) ||
+                  (modalType === 'estado' && opcion === selectedEstado) ||
+                  (modalType === 'metodo' && opcion === selectedMetodo);
+
+                return (
+                  <TouchableOpacity
+                    key={opcion}
+                    style={[styles.optionItem, isSelected && styles.optionItemActive]}
+                    activeOpacity={0.7}
+                    onPress={() => selectFilter(opcion)}
+                  >
+                    <Text style={[styles.optionText, isSelected && styles.optionTextActive]}>
+                      {opcion}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: isSmallDevice ? 40 : 50,
+    paddingBottom: 100,
+    paddingHorizontal: width * 0.05,
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    marginBottom: isSmallDevice ? 20 : 24,
   },
   backButton: {
-    marginRight: 12,
+    width: isSmallDevice ? 40 : 44,
+    height: isSmallDevice ? 40 : 44,
+    borderRadius: isSmallDevice ? 20 : 22,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  headerTextContainer: {
+  headerContent: {
     flex: 1,
+    marginLeft: 12,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: isSmallDevice ? 24 : 28,
+    fontWeight: '600',
+    color: colors.text,
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: isSmallDevice ? 13 : 14,
+    color: colors.textSecondary,
+  },
+  placeholder: {
+    width: isSmallDevice ? 40 : 44,
   },
   filtersContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    gap: 12,
-    backgroundColor: '#7BB7F2',
+    gap: 10,
+    marginBottom: 12,
   },
-  filterDropdown: {
+  filterButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFF',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    backgroundColor: colors.card,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  filterDropdownText: {
-    fontSize: 16,
+  filterButtonActive: {
+    borderColor: colors.primary,
+    backgroundColor: isDark ? colors.card : colors.inputBg,
+  },
+  filterText: {
+    fontSize: 13,
     fontWeight: '600',
-    color: '#000',
+    color: colors.text,
   },
-  scrollView: {
+  filterTextActive: {
+    color: colors.primary,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.card,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    gap: 6,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  clearText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  summaryCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: isSmallDevice ? 18 : 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  summaryItem: {
     flex: 1,
-    backgroundColor: '#7BB7F2',
+    alignItems: 'center',
+  },
+  summaryDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: colors.border,
+  },
+  summaryLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 6,
+  },
+  summaryValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.primary,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 16,
+    gap: 8,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: isSmallDevice ? 16 : 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  pagosContainer: {
+    gap: 16,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 6,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   pagoCard: {
-    backgroundColor: '#FFF',
-    marginHorizontal: 16,
+    backgroundColor: colors.card,
     borderRadius: 16,
-    padding: 16,
+    padding: isSmallDevice ? 16 : 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  pagoHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  pagoRow: {
-    flexDirection: 'row',
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  pagoRowDouble: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 12,
-  },
-  pagoRowHalf: {
+  pagoHeaderInfo: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
-  pagoLabel: {
-    fontSize: 14,
+  pagoCita: {
+    fontSize: isSmallDevice ? 15 : 16,
     fontWeight: '600',
-    color: '#000',
-    marginRight: 8,
+    color: colors.text,
+    marginBottom: 4,
   },
-  pagoValue: {
-    flex: 1,
-    backgroundColor: '#BFDBFE',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+  fechaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  pagoValueSmall: {
-    backgroundColor: '#BFDBFE',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  pagoValueText: {
-    fontSize: 14,
-    color: '#000',
+  pagoFecha: {
+    fontSize: 13,
+    color: colors.textSecondary,
   },
   estadoBadge: {
-    backgroundColor: '#86EFAC',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     borderRadius: 12,
+    marginLeft: 8,
   },
   estadoText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFF',
+    textTransform: 'uppercase',
+  },
+  infoSection: {
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    gap: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  infoLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  infoValue: {
+    fontSize: 13,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  verMasContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: 6,
+  },
+  verMasText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
+    color: colors.primary,
   },
-  separatorContainer: {
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
+    marginBottom: 24,
   },
-  bottomSpace: {
-    height: 30,
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  optionsContainer: {
+    gap: 12,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  optionItemActive: {
+    borderColor: colors.primary,
+  },
+  optionText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  optionTextActive: {
+    fontWeight: '600',
+    color: colors.primary,
   },
 });
