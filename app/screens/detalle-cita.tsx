@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   StatusBar,
   Dimensions,
+  Linking,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -28,6 +30,31 @@ export default function DetalleCitaScreen() {
   // Navegar hacia atrás
   const handleBack = () => {
     router.push('/(tabs)');
+  };
+
+  // Función para manejar "No Asistiré"
+  const handleNoAsistire = () => {
+    Alert.alert(
+      'No Asistiré',
+      '¿Cómo deseas avisar que no podrás asistir a esta cita?',
+      [
+        { 
+          text: 'Cancelar', 
+          style: 'cancel' 
+        },
+        { 
+          text: 'Llamar', 
+          onPress: () => Linking.openURL('tel:7713339456')
+        },
+        { 
+          text: 'WhatsApp', 
+          onPress: () => {
+            const mensaje = `Hola, soy ${params.paciente}. Lamentablemente no podré asistir a mi cita del ${params.fecha} a las ${params.hora}. Me gustaría reagendarla.`;
+            Linking.openURL(`whatsapp://send?phone=527713339456&text=${encodeURIComponent(mensaje)}`);
+          }
+        },
+      ]
+    );
   };
 
   // Función para obtener color del estado
@@ -202,23 +229,26 @@ export default function DetalleCitaScreen() {
           )}
         </View>
 
-        {/* Botones de navegación */}
+        {/* Botones de acción */}
         <View style={styles.navigationButtons}>
-          <TouchableOpacity 
-            style={styles.navButton} 
-            onPress={() => router.push('/screens/citas')}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={20} color={colors.primary} />
-            <Text style={styles.navButtonText}>Volver a Citas</Text>
-          </TouchableOpacity>
+          {params.estado === 'pendiente' && (
+            <TouchableOpacity 
+              style={styles.navButton} 
+              onPress={handleNoAsistire}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close-circle-outline" size={20} color="#EF4444" />
+              <Text style={[styles.navButtonText, { color: '#EF4444' }]}>No Asistiré</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity 
             style={styles.navButtonPrimary}
+            onPress={() => router.push('/screens/citas')}
             activeOpacity={0.7}
           >
-            <Text style={styles.navButtonTextPrimary}>Siguiente Cita</Text>
-            <Ionicons name="arrow-forward" size={20} color="#FFF" />
+            <Text style={styles.navButtonTextPrimary}>Ver Mis Citas</Text>
+            <Ionicons name="calendar" size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -254,6 +284,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    borderBottomWidth: 3,
   },
   headerContent: {
     flex: 1,
@@ -278,6 +309,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     padding: isSmallDevice ? 18 : 20,
     borderWidth: 1,
     borderColor: colors.border,
+    borderBottomWidth: 3,
     marginBottom: 20,
   },
   citaHeader: {
@@ -298,6 +330,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     marginRight: 14,
     borderWidth: 1,
     borderColor: colors.border,
+    borderBottomWidth: 3,
   },
   citaHeaderInfo: {
     flex: 1,
@@ -328,6 +361,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   fechaRow: {
     flexDirection: 'row',
@@ -370,6 +405,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   infoRow: {
     flexDirection: 'row',
@@ -391,6 +428,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   pagoItem: {
     flex: 1,
@@ -430,6 +469,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     borderRadius: 12,
     padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   notasText: {
     fontSize: 14,
@@ -451,6 +492,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: colors.border,
+    borderBottomWidth: 3,
   },
   navButtonPrimary: {
     flex: 1,
@@ -461,6 +503,8 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
+    borderBottomWidth: 3,
+    borderColor: colors.primary,
   },
   navButtonText: {
     fontSize: 14,
