@@ -35,40 +35,9 @@ export default function CitasScreen() {
   const citas = [
     {
       id: 1,
-      titulo: "Cita 1",
-      fecha: "24 de septiembre de 2025",
-      hora: "10:00 AM",
-      paciente: "Emmanuel Rodríguez Martínez",
-      edad: 20,
-      odontologo: "Dr. Hugo Gómez Ramírez",
-      tratamiento: "Ortodoncia - Ajuste de brackets",
-      estado: "completada",
-      duracion: "40 min",
-      pago: "Pagado",
-      monto: "$600 MXN",
-      notas:
-        "Se ajustó arco superior y se cambiaron ligas elásticas. Ligera sensibilidad esperada por 24-48 h",
-    },
-    {
-      id: 2,
-      titulo: "Cita 2",
+      titulo: "Limpieza Dental",
       fecha: "15 de diciembre de 2025",
-      hora: "11:30 AM",
-      paciente: "Emmanuel Rodríguez Martínez",
-      edad: 20,
-      odontologo: "Dr. Hugo Gómez Ramírez",
-      tratamiento: "Ortodoncia - Revisión mensual",
-      estado: "pendiente",
-      duracion: "30 min",
-      pago: "Pendiente",
-      monto: "$500 MXN",
-      notas: "Revisión rutinaria del progreso",
-    },
-    {
-      id: 3,
-      titulo: "Cita 3",
-      fecha: "20 de enero de 2026",
-      hora: "09:00 AM",
+      hora: "10:00 AM",
       paciente: "Emmanuel Rodríguez Martínez",
       edad: 20,
       odontologo: "Dr. Hugo Gómez Ramírez",
@@ -77,12 +46,42 @@ export default function CitasScreen() {
       duracion: "45 min",
       pago: "Pendiente",
       monto: "$800 MXN",
-      notas: "",
+      notas: "Traer cepillo dental y recordar no comer 1 hora antes",
+    },
+    {
+      id: 2,
+      titulo: "Revisión General",
+      fecha: "20 de enero de 2026",
+      hora: "11:30 AM",
+      paciente: "Emmanuel Rodríguez Martínez",
+      edad: 20,
+      odontologo: "Dr. Hugo Gómez Ramírez",
+      tratamiento: "Consulta de revisión general",
+      estado: "pendiente",
+      duracion: "30 min",
+      pago: "Pendiente",
+      monto: "$500 MXN",
+      notas: "Revisión rutinaria semestral",
+    },
+    {
+      id: 3,
+      titulo: "Consulta General",
+      fecha: "15 de marzo de 2024",
+      hora: "09:00 AM",
+      paciente: "Emmanuel Rodríguez Martínez",
+      edad: 20,
+      odontologo: "Dr. Hugo Gómez Ramírez",
+      tratamiento: "Consulta general y diagnóstico",
+      estado: "completada",
+      duracion: "30 min",
+      pago: "Pagado",
+      monto: "$400 MXN",
+      notas: "Primera consulta, se realizó diagnóstico completo",
     },
     {
       id: 4,
-      titulo: "Cita 4",
-      fecha: "10 de octubre de 2025",
+      titulo: "Extracción Muela",
+      fecha: "10 de octubre de 2024",
       hora: "02:00 PM",
       paciente: "Emmanuel Rodríguez Martínez",
       edad: 20,
@@ -92,21 +91,48 @@ export default function CitasScreen() {
       duracion: "60 min",
       pago: "No aplica",
       monto: "-",
-      notas: "Cancelada por el paciente",
+      notas: "Cancelada por el paciente - se reprogramará",
+    },
+    {
+      id: 5,
+      titulo: "Limpieza Dental",
+      fecha: "20 de junio de 2024",
+      hora: "10:30 AM",
+      paciente: "Emmanuel Rodríguez Martínez",
+      edad: 20,
+      odontologo: "Dr. Hugo Gómez Ramírez",
+      tratamiento: "Limpieza dental profunda",
+      estado: "completada",
+      duracion: "40 min",
+      pago: "Pagado",
+      monto: "$750 MXN",
+      notas:
+        "Limpieza realizada exitosamente. Recomendación: usar hilo dental diariamente",
     },
   ];
 
   const filtros = ["Todas", "Pendientes", "Completadas", "Canceladas"];
 
-  const citasFiltradas = citas.filter((c) => {
-    if (selectedFilter === "Pendientes") return c.estado === "pendiente";
-    if (selectedFilter === "Completadas") return c.estado === "completada";
-    if (selectedFilter === "Canceladas") return c.estado === "cancelada";
-    const matchSearch =
-      c.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.tratamiento.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchSearch;
-  });
+  // Filtrar citas
+  const citasFiltradas = citas
+    .filter((c) => {
+      if (selectedFilter === "Pendientes") return c.estado === "pendiente";
+      if (selectedFilter === "Completadas") return c.estado === "completada";
+      if (selectedFilter === "Canceladas") return c.estado === "cancelada";
+      const matchSearch =
+        c.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.tratamiento.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchSearch;
+    })
+    // Ordenar: pendientes primero, luego completadas, luego canceladas
+    .sort((a, b) => {
+      const prioridad: Record<string, number> = {
+        pendiente: 1,
+        completada: 2,
+        cancelada: 3,
+      };
+      return prioridad[a.estado] - prioridad[b.estado];
+    });
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
@@ -233,7 +259,6 @@ export default function CitasScreen() {
             </View>
           ) : (
             citasFiltradas.map((cita) => (
-              // En la parte donde mapeas las citas, cambia esto:
               <TouchableOpacity
                 key={cita.id}
                 style={styles.citaCard}
