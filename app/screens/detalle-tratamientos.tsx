@@ -30,26 +30,27 @@ export default function DetalleTratamientoScreen() {
   };
 
   // Datos del tratamiento (luego vendrán del API)
-  const tratamiento = {
-    nombre: 'Ortodoncia',
-    descripcion: 'Tratamiento de alineación dental con brackets metálicos',
-    fechaInicio: '15 Ene 2024',
-    duracionEstimada: '18 meses',
-    progreso: 35,
-    proximaCita: '20 Nov 2024',
-    dentista: 'Dr. Hugo Gómez Ramírez',
-    costoTotal: '$35,000',
-    pagado: '$12,250',
-    pendiente: '$22,750',
-  };
+const tratamiento = {
+  nombre: 'Ortodoncia',
+  descripcion: 'Tratamiento de alineación dental con brackets metálicos',
+  fechaInicio: '15 Ene 2024',
+  duracionEstimada: '18 meses',
+  progreso: 35,
+  proximaCita: '15 Dic 2025',
+  dentista: 'Dr. Hugo Gómez Ramírez',
+  costoTotal: '$35,000',
+  pagado: '$12,250',
+  pendiente: '$22,750',
+};
 
-  const sesiones = [
-    { id: 1, fecha: '15 Ene 2024', descripcion: 'Colocación de brackets', completada: true },
-    { id: 2, fecha: '15 Feb 2024', descripcion: 'Primer ajuste', completada: true },
-    { id: 3, fecha: '15 Mar 2024', descripcion: 'Segundo ajuste', completada: true },
-    { id: 4, fecha: '20 Nov 2024', descripcion: 'Tercer ajuste', completada: false },
-    { id: 5, fecha: '20 Dic 2024', descripcion: 'Cuarto ajuste', completada: false },
-  ];
+const sesiones = [
+  { id: 1, fecha: '15 Ene 2024', descripcion: 'Colocación de brackets', completada: true },
+  { id: 2, fecha: '15 Mar 2024', descripcion: 'Primer ajuste', completada: true },
+  { id: 3, fecha: '15 Jun 2024', descripcion: 'Segundo ajuste', completada: true },
+  { id: 4, fecha: '24 Sep 2024', descripcion: 'Tercer ajuste', completada: true },
+  { id: 5, fecha: '15 Dic 2025', descripcion: 'Cuarto ajuste', completada: false },
+  { id: 6, fecha: '20 Ene 2026', descripcion: 'Quinto ajuste', completada: false },
+];
 
   const styles = createStyles(colors, isDark);
 

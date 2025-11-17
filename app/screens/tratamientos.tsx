@@ -41,7 +41,7 @@ export default function ExploreScreen() {
     descripcion: 'Tratamiento de alineación dental',
     icon: 'medkit',
     progreso: 35,
-    proximaCita: '20 Nov 2024',
+    proximaCita: '20 Nov 2025',
   };
 
   const styles = createStyles(colors, isDark);

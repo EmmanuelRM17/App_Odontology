@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemeContext } from '../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
@@ -18,6 +18,7 @@ const isSmallDevice = width < 375;
 
 export default function DetalleCitaScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const theme = useContext(ThemeContext);
 
   if (!theme) return null;
@@ -27,6 +28,34 @@ export default function DetalleCitaScreen() {
   // Navegar hacia atrás
   const handleBack = () => {
     router.push('/(tabs)');
+  };
+
+  // Función para obtener color del estado
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case 'completada':
+        return '#22C55E';
+      case 'pendiente':
+        return '#FBBF24';
+      case 'cancelada':
+        return '#EF4444';
+      default:
+        return colors.textSecondary;
+    }
+  };
+
+  // Función para obtener texto del estado
+  const getEstadoTexto = (estado: string) => {
+    switch (estado) {
+      case 'completada':
+        return 'Completada';
+      case 'pendiente':
+        return 'Pendiente';
+      case 'cancelada':
+        return 'Cancelada';
+      default:
+        return estado;
+    }
   };
 
   const styles = createStyles(colors, isDark);
@@ -69,11 +98,11 @@ export default function DetalleCitaScreen() {
               <Ionicons name="calendar" size={32} color={colors.primary} />
             </View>
             <View style={styles.citaHeaderInfo}>
-              <Text style={styles.citaTitulo}>Cita 1</Text>
-              <Text style={styles.citaSesion}>Sesión 1 de 6</Text>
+              <Text style={styles.citaTitulo}>{params.titulo}</Text>
+              <Text style={styles.citaSesion}>{params.tratamiento}</Text>
             </View>
-            <View style={styles.estadoBadge}>
-              <Text style={styles.estadoText}>Completada</Text>
+            <View style={[styles.estadoBadge, { backgroundColor: getEstadoColor(params.estado as string) }]}>
+              <Text style={styles.estadoText}>{getEstadoTexto(params.estado as string)}</Text>
             </View>
           </View>
 
@@ -81,12 +110,12 @@ export default function DetalleCitaScreen() {
           <View style={styles.fechaCard}>
             <View style={styles.fechaRow}>
               <Ionicons name="calendar-outline" size={18} color={colors.primary} />
-              <Text style={styles.fechaText}>Miércoles, 24 de septiembre de 2025</Text>
+              <Text style={styles.fechaText}>{params.fecha}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.fechaRow}>
               <Ionicons name="time-outline" size={18} color={colors.primary} />
-              <Text style={styles.horaText}>10:00 AM</Text>
+              <Text style={styles.horaText}>{params.hora}</Text>
             </View>
           </View>
 
@@ -99,11 +128,11 @@ export default function DetalleCitaScreen() {
             <View style={styles.infoContainer}>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Paciente:</Text>
-                <Text style={styles.infoValue}>Emmanuel Rodríguez Martínez</Text>
+                <Text style={styles.infoValue}>{params.paciente}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Edad:</Text>
-                <Text style={styles.infoValue}>20 años</Text>
+                <Text style={styles.infoValue}>{params.edad} años</Text>
               </View>
             </View>
           </View>
@@ -117,15 +146,15 @@ export default function DetalleCitaScreen() {
             <View style={styles.infoContainer}>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Odontólogo:</Text>
-                <Text style={styles.infoValue}>Dr. Hugo Gómez Ramírez</Text>
+                <Text style={styles.infoValue}>{params.odontologo}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Tratamiento:</Text>
-                <Text style={styles.infoValue}>Ortodoncia - Ajuste de brackets</Text>
+                <Text style={styles.infoValue}>{params.tratamiento}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Duración:</Text>
-                <Text style={styles.infoValue}>40 minutos</Text>
+                <Text style={styles.infoValue}>{params.duracion}</Text>
               </View>
             </View>
           </View>
@@ -139,31 +168,38 @@ export default function DetalleCitaScreen() {
             <View style={styles.pagoCard}>
               <View style={styles.pagoItem}>
                 <Text style={styles.pagoLabel}>Monto</Text>
-                <Text style={styles.pagoMonto}>$600 MXN</Text>
+                <Text style={styles.pagoMonto}>{params.monto}</Text>
               </View>
               <View style={styles.pagoDivider} />
               <View style={styles.pagoItem}>
                 <Text style={styles.pagoLabel}>Estatus</Text>
-                <View style={styles.pagadoBadge}>
-                  <Ionicons name="checkmark-circle" size={16} color="#FFF" />
-                  <Text style={styles.pagadoText}>Pagado</Text>
+                <View style={[
+                  styles.pagadoBadge, 
+                  { backgroundColor: params.pago === 'Pagado' ? '#22C55E' : params.pago === 'Pendiente' ? '#FBBF24' : colors.textSecondary }
+                ]}>
+                  <Ionicons 
+                    name={params.pago === 'Pagado' ? 'checkmark-circle' : params.pago === 'Pendiente' ? 'time' : 'close-circle'} 
+                    size={16} 
+                    color="#FFF" 
+                  />
+                  <Text style={styles.pagadoText}>{params.pago}</Text>
                 </View>
               </View>
             </View>
           </View>
 
           {/* Notas clínicas */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <MaterialCommunityIcons name="text" size={18} color={colors.text} />
-              <Text style={styles.sectionTitle}>Notas Clínicas</Text>
+          {params.notas && params.notas.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <MaterialCommunityIcons name="text" size={18} color={colors.text} />
+                <Text style={styles.sectionTitle}>Notas Clínicas</Text>
+              </View>
+              <View style={styles.notasContainer}>
+                <Text style={styles.notasText}>{params.notas}</Text>
+              </View>
             </View>
-            <View style={styles.notasContainer}>
-              <Text style={styles.notasText}>
-                Se ajustó arco superior y se cambiaron ligas elásticas. Ligera sensibilidad esperada por 24-48 h
-              </Text>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* Botones de navegación */}
@@ -277,7 +313,6 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     color: colors.textSecondary,
   },
   estadoBadge: {
-    backgroundColor: '#22C55E',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -381,7 +416,6 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   pagadoBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#22C55E',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10,
