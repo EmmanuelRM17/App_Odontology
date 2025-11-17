@@ -38,98 +38,127 @@ export default function PagosScreen() {
   const pagos = [
     {
       id: 1,
-      fecha: '24 de septiembre del 2025',
-      mes: 'septiembre',
+      fecha: '15 de diciembre del 2025',
+      mes: 'diciembre',
       cita: 'Ortodoncia - Ajuste de brackets',
-      monto: 400,
+      monto: 1200,
       metodo: 'Transferencia',
-      estado: 'Pagado',
-      referencia: 'RC-0924-1034',
+      estado: 'Pendiente',
+      referencia: 'RC-1225-1034',
     },
     {
       id: 2,
-      fecha: '15 de agosto del 2025',
-      mes: 'agosto',
-      cita: 'Limpieza dental',
-      monto: 600,
+      fecha: '28 de noviembre del 2025',
+      mes: 'noviembre',
+      cita: 'Limpieza dental profunda',
+      monto: 800,
       metodo: 'Efectivo',
-      estado: 'Pagado',
-      referencia: 'RC-0824-0842',
+      estado: 'Pendiente',
+      referencia: 'RC-1125-0842',
     },
     {
       id: 3,
-      fecha: '10 de julio del 2025',
-      mes: 'julio',
-      cita: 'Endodoncia',
-      monto: 3000,
+      fecha: '20 de noviembre del 2025',
+      mes: 'noviembre',
+      cita: 'Revisión de ortodoncia',
+      monto: 400,
       metodo: 'Tarjeta',
       estado: 'Pendiente',
-      referencia: 'RC-0724-0523',
+      referencia: 'RC-1125-0523',
     },
     {
       id: 4,
-      fecha: '05 de junio del 2025',
-      mes: 'junio',
+      fecha: '05 de octubre del 2025',
+      mes: 'octubre',
       cita: 'Blanqueamiento dental',
       monto: 2500,
       metodo: 'Transferencia',
       estado: 'Pagado',
-      referencia: 'RC-0624-0312',
+      referencia: 'RC-1025-0312',
     },
     {
       id: 5,
-      fecha: '20 de mayo del 2025',
-      mes: 'mayo',
-      cita: 'Extracción muela',
-      monto: 800,
+      fecha: '20 de septiembre del 2025',
+      mes: 'septiembre',
+      cita: 'Extracción muela del juicio',
+      monto: 1800,
       metodo: 'Efectivo',
-      estado: 'Pendiente',
-      referencia: 'RC-0524-0789',
+      estado: 'Pagado',
+      referencia: 'RC-0925-0789',
+    },
+    {
+      id: 6,
+      fecha: '10 de agosto del 2025',
+      mes: 'agosto',
+      cita: 'Endodoncia molar',
+      monto: 3000,
+      metodo: 'Tarjeta',
+      estado: 'Pagado',
+      referencia: 'RC-0825-0156',
+    },
+    {
+      id: 7,
+      fecha: '15 de julio del 2025',
+      mes: 'julio',
+      cita: 'Limpieza dental',
+      monto: 600,
+      metodo: 'Efectivo',
+      estado: 'Pagado',
+      referencia: 'RC-0725-0421',
     },
   ];
 
   const filtrosOpcionesMap = {
     fecha: ['Todos', 'Este mes', 'Mes anterior', 'Últimos 3 meses', 'Últimos 6 meses'],
-    estado: ['Todos', 'Pagado', 'Pendiente'],
+    estado: ['Todos', 'Pendiente', 'Pagado'],
     metodo: ['Todos', 'Efectivo', 'Tarjeta', 'Transferencia'],
   };
 
-  // Filtrar pagos
-  const pagosFiltrados = pagos.filter(pago => {
-    // Filtro por estado
-    if (selectedEstado !== 'Todos' && pago.estado !== selectedEstado) {
-      return false;
-    }
+  // Filtrar y ordenar pagos (pendientes primero)
+  const pagosFiltrados = pagos
+    .filter(pago => {
+      // Filtro por estado
+      if (selectedEstado !== 'Todos' && pago.estado !== selectedEstado) {
+        return false;
+      }
 
-    // Filtro por método
-    if (selectedMetodo !== 'Todos' && pago.metodo !== selectedMetodo) {
-      return false;
-    }
+      // Filtro por método
+      if (selectedMetodo !== 'Todos' && pago.metodo !== selectedMetodo) {
+        return false;
+      }
 
-    // Filtro por fecha
-    if (selectedFecha !== 'Todos') {
-      const mesesActuales = ['septiembre', 'agosto', 'julio', 'junio', 'mayo', 'abril'];
-      const mesActual = 'septiembre';
-      const mesAnterior = 'agosto';
+      // Filtro por fecha
+      if (selectedFecha !== 'Todos') {
+        const mesActual = 'noviembre';
+        const mesAnterior = 'octubre';
+        const ultimos3 = ['noviembre', 'octubre', 'septiembre'];
+        const ultimos6 = ['noviembre', 'octubre', 'septiembre', 'agosto', 'julio', 'junio'];
+        
+        if (selectedFecha === 'Este mes' && pago.mes !== mesActual) {
+          return false;
+        }
+        if (selectedFecha === 'Mes anterior' && pago.mes !== mesAnterior) {
+          return false;
+        }
+        if (selectedFecha === 'Últimos 3 meses' && !ultimos3.includes(pago.mes)) {
+          return false;
+        }
+        if (selectedFecha === 'Últimos 6 meses' && !ultimos6.includes(pago.mes)) {
+          return false;
+        }
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      // Primero pendientes, luego pagados
+      if (a.estado === 'Pendiente' && b.estado === 'Pagado') return -1;
+      if (a.estado === 'Pagado' && b.estado === 'Pendiente') return 1;
       
-      if (selectedFecha === 'Este mes' && pago.mes !== mesActual) {
-        return false;
-      }
-      if (selectedFecha === 'Mes anterior' && pago.mes !== mesAnterior) {
-        return false;
-      }
-      if (selectedFecha === 'Últimos 3 meses') {
-        const ultimos3 = ['septiembre', 'agosto', 'julio'];
-        if (!ultimos3.includes(pago.mes)) return false;
-      }
-      if (selectedFecha === 'Últimos 6 meses') {
-        const ultimos6 = ['septiembre', 'agosto', 'julio', 'junio', 'mayo', 'abril'];
-        if (!ultimos6.includes(pago.mes)) return false;
-      }
-    }
-
-    return true;
-  });
+      // Dentro del mismo estado, más recientes primero
+      const mesesOrden = ['diciembre', 'noviembre', 'octubre', 'septiembre', 'agosto', 'julio', 'junio', 'mayo'];
+      return mesesOrden.indexOf(a.mes) - mesesOrden.indexOf(b.mes);
+    });
 
   // Calcular totales
   const totalPagado = pagosFiltrados
