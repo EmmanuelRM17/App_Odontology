@@ -25,11 +25,10 @@ import { ThemeContext } from "../contexts/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import dentistImage from "../../assets/images/dentist.png";
 import logoImage from "../../assets/images/logo.png";
-
+import api from "../services/api";
 const { width, height } = Dimensions.get("window");
 const EMAIL_REGEX =
   /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|live|uthh\.edu)\.(com|mx)$/;
-const API_URL = "http://192.168.95.189:3001/api/users/loginMovil";
 
 export default function Login() {
   const router = useRouter();
@@ -194,28 +193,44 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          password: password,
-        }),
-      });
+      const data = await api.login(email.trim(), password);
 
-      const data = await response.json();
-      await handleServerResponse(response, data);
-    } catch (error) {
+      if (!data.user?.id) {
+        setPasswordError("Error en el servidor");
+        return;
+      }
+
+      const userData = {
+        id: data.user.id.toString(),
+        name: data.user.name || data.user.nombre || "Usuario",
+        email: data.user.email || email,
+      };
+
+      await login(data.user.id.toString(), userData);
+
+      if (rememberMe) {
+        await AsyncStorage.setItem("savedEmail", email.trim());
+      } else {
+        await AsyncStorage.removeItem("savedEmail");
+      }
+
+      router.replace("/(tabs)");
+    } catch (error: any) {
       console.error("Error al iniciar sesión:", error);
-      Alert.alert(
-        "Error de conexión",
-        "No se pudo conectar con el servidor. Verifica tu conexión a internet."
-      );
+      if (error.message?.includes("contraseña")) {
+        setPasswordError("La contraseña es incorrecta");
+      } else if (error.message?.includes("correo")) {
+        setEmailError("El correo no está registrado");
+      } else {
+        Alert.alert(
+          "Error de conexión",
+          "No se pudo conectar con el servidor. Verifica tu conexión a internet."
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
-
   const styles = createStyles(colors, keyboardVisible);
 
   return (

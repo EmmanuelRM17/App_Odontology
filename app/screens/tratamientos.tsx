@@ -1,454 +1,297 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  TextInput,
-} from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React, { useContext } from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Dimensions,
+} from 'react-native';
+import { ThemeContext } from '../contexts/ThemeContext';
 
-export default function TratamientosScreen() {
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+
+export default function ExploreScreen() {
   const router = useRouter();
-  const [selectedFilter, setSelectedFilter] = useState('Todos');
-  const [searchQuery, setSearchQuery] = useState('');
+  const theme = useContext(ThemeContext);
 
-  const tratamientos = [
-    {
-      id: 1,
-      titulo: 'Ortodoncia',
-      progreso: 65,
-      proximaCita: '28 Oct 2025',
-      doctor: 'Dra. Carol García',
-      estado: 'activo',
-    },
-    {
-      id: 2,
-      titulo: 'Limpieza Dental',
-      progreso: 30,
-      proximaCita: '5 Nov 2025',
-      doctor: 'Dr. Luis Mendoza',
-      estado: 'activo',
-    },
-    {
-      id: 3,
-      titulo: 'Extracción',
-      progreso: 100,
-      proximaCita: 'Completado',
-      doctor: 'Dr. Carlos Ruiz',
-      estado: 'completado',
-    },
-  ];
+  if (!theme) return null;
 
-  const filtros = ['Todos', 'Activos', 'Completados'];
+  const { colors, isDark } = theme;
 
-  const tratamientosFiltrados = tratamientos.filter(t => {
-    if (selectedFilter === 'Activos') return t.estado === 'activo';
-    if (selectedFilter === 'Completados') return t.estado === 'completado';
-    const matchSearch = t.titulo.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchSearch;
-  });
+  // Navegar hacia atrás
+  const handleBack = () => {
+    router.push('/(tabs)');
+  };
+
+  // Navegar al detalle del tratamiento
+  const handleVerDetalle = () => {
+    router.push('./detalle-tratamientos');
+  };
+
+  // Tratamiento activo del paciente (luego vendrá del API)
+  const tratamiento = {
+    id: 1,
+    nombre: 'Ortodoncia',
+    descripcion: 'Tratamiento de alineación dental',
+    icon: 'medkit',
+    progreso: 45,
+    proximaCita: '15 Dic 2025',
+  };
+
+  const styles = createStyles(colors, isDark);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={colors.background} 
+      />
       
       <ScrollView 
-        style={styles.scrollView} 
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)')} style={styles.backButton} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={26} color="#FFF" />
+          <TouchableOpacity 
+            style={styles.backButton}
+            activeOpacity={0.7}
+            onPress={handleBack}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Mis Tratamientos</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        {/* Búsqueda */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={20} color="rgba(255, 255, 255, 0.7)" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Buscar tratamiento..."
-              placeholderTextColor="rgba(255, 255, 255, 0.5)"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-                <Ionicons name="close-circle" size={20} color="rgba(255, 255, 255, 0.7)" />
-              </TouchableOpacity>
-            )}
+          
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Mi Tratamiento</Text>
+            <Text style={styles.headerSubtitle}>Tratamiento activo</Text>
           </View>
         </View>
 
-        {/* Filtros */}
-        <View style={styles.filtersContainer}>
-          {filtros.map((filtro) => (
-            <TouchableOpacity
-              key={filtro}
-              style={[
-                styles.filterButton,
-                selectedFilter === filtro && styles.filterButtonActive,
-              ]}
-              onPress={() => setSelectedFilter(filtro)}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  selectedFilter === filtro && styles.filterTextActive,
-                ]}
-              >
-                {filtro}
-              </Text>
-              {selectedFilter === filtro && (
-                <Ionicons name="checkmark-circle" size={20} color="#2563EB" />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Tratamientos */}
-        <View style={styles.section}>
-          {tratamientosFiltrados.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="folder-open-outline" size={64} color="rgba(255, 255, 255, 0.4)" />
-              <Text style={styles.emptyText}>No hay tratamientos</Text>
+        <TouchableOpacity 
+          style={styles.tratamientoCard}
+          activeOpacity={0.7}
+          onPress={handleVerDetalle}
+        >
+          <View style={styles.cardHeader}>
+            <View style={styles.iconBox}>
+              <Ionicons name={tratamiento.icon as any} size={32} color={colors.primary} />
             </View>
-          ) : (
-            tratamientosFiltrados.map((tratamiento) => (
-              <View 
-                key={tratamiento.id} 
-                style={[
-                  styles.tratamientoCard,
-                  tratamiento.estado === 'completado' && styles.cardCompletado
-                ]}
-              >
-                {/* Header */}
-                <View style={styles.cardHeader}>
-                  <View style={[
-                    styles.iconBox,
-                    tratamiento.estado === 'completado' && styles.iconBoxCompletado
-                  ]}>
-                    <MaterialCommunityIcons 
-                      name="tooth-outline" 
-                      size={24} 
-                      color="#FFF" 
-                    />
-                  </View>
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.cardTitle}>{tratamiento.titulo}</Text>
-                    <Text style={styles.cardDoctor}>{tratamiento.doctor}</Text>
-                  </View>
-                  {tratamiento.estado === 'completado' && (
-                    <View style={styles.badgeCompletado}>
-                      <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                    </View>
-                  )}
-                </View>
+            <View style={styles.cardHeaderInfo}>
+              <Text style={styles.tratamientoNombre}>{tratamiento.nombre}</Text>
+              <Text style={styles.tratamientoDescripcion}>{tratamiento.descripcion}</Text>
+            </View>
+          </View>
 
-                {/* Progreso */}
-                <View style={styles.progressSection}>
-                  <View style={styles.progressInfo}>
-                    <Text style={styles.progressLabel}>Progreso</Text>
-                    <Text style={styles.progressPercent}>{tratamiento.progreso}%</Text>
-                  </View>
-                  <View style={styles.progressBar}>
-                    <View 
-                      style={[
-                        styles.progressFill, 
-                        { width: `${tratamiento.progreso}%` },
-                        tratamiento.estado === 'completado' && styles.progressCompletado
-                      ]} 
-                    />
-                  </View>
-                </View>
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>Progreso</Text>
+              <Text style={styles.progressPercent}>{tratamiento.progreso}%</Text>
+            </View>
+            <View style={styles.progressBarContainer}>
+              <View style={[styles.progressBar, { width: `${tratamiento.progreso}%` }]} />
+            </View>
+          </View>
 
-                {/* Próxima cita */}
-                <View style={styles.citaInfo}>
-                  <Ionicons name="calendar-outline" size={16} color="rgba(255, 255, 255, 0.8)" />
-                  <Text style={styles.citaText}>Próxima cita: {tratamiento.proximaCita}</Text>
-                </View>
+          <View style={styles.citaSection}>
+            <View style={styles.citaIcon}>
+              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+            </View>
+            <View style={styles.citaInfo}>
+              <Text style={styles.citaLabel}>Próxima cita</Text>
+              <Text style={styles.citaFecha}>{tratamiento.proximaCita}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.icon} />
+          </View>
+        </TouchableOpacity>
 
-                {/* Botones */}
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => router.push('/screens/detalle-tratamientos')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.actionButtonText}>Ver Detalles</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#FFF" />
-                </TouchableOpacity>
-                
-                {tratamiento.estado === 'activo' && (
-                  <TouchableOpacity 
-                    style={styles.actionButtonSecondary}
-                    onPress={() => router.push('/screens/citas')}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="calendar" size={20} color="#FFF" />
-                    <Text style={styles.actionButtonText}>Ver Citas</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))
-          )}
+        <View style={styles.infoCard}>
+          <View style={styles.infoIcon}>
+            <Ionicons name="information-circle" size={24} color={colors.primary} />
+          </View>
+          <Text style={styles.infoText}>
+            Toca la tarjeta para ver todos los detalles de tu tratamiento, historial de sesiones e información financiera.
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingTop: isSmallDevice ? 40 : 50,
+    paddingBottom: 100,
+    paddingHorizontal: width * 0.05,
+  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 24,
+    marginBottom: isSmallDevice ? 24 : 28,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    width: isSmallDevice ? 40 : 44,
+    height: isSmallDevice ? 40 : 44,
+    borderRadius: isSmallDevice ? 20 : 22,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderBottomWidth: 3,
+  },
+  headerContent: {
+    flex: 1,
+    marginLeft: 12,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  placeholder: {
-    width: 44,
-  },
-  searchContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#FFF',
-    fontSize: 15,
-  },
-  filtersContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-    gap: 12,
-  },
-  filterButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  filterButtonActive: {
-    backgroundColor: '#FFF',
-    borderColor: '#FFF',
-    borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0, 0, 0, 0.15)',
-  },
-  filterText: {
-    fontSize: 16,
+    fontSize: isSmallDevice ? 24 : 28,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: colors.text,
+    marginBottom: 4,
   },
-  filterTextActive: {
-    color: '#2563EB',
-    fontWeight: '700',
-  },
-  section: {
-    paddingHorizontal: 24,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 16,
+  headerSubtitle: {
+    fontSize: isSmallDevice ? 13 : 14,
+    color: colors.textSecondary,
   },
   tratamientoCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  cardCompletado: {
-    borderColor: 'rgba(34, 197, 94, 0.4)',
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: isSmallDevice ? 18 : 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderBottomWidth: 3,
+    marginBottom: isSmallDevice ? 16 : 20,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    width: isSmallDevice ? 60 : 70,
+    height: isSmallDevice ? 60 : 70,
+    borderRadius: isSmallDevice ? 30 : 35,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderBottomWidth: 3,
+  },
+  cardHeaderInfo: {
+    flex: 1,
+  },
+  tratamientoNombre: {
+    fontSize: isSmallDevice ? 18 : 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 6,
+  },
+  tratamientoDescripcion: {
+    fontSize: isSmallDevice ? 13 : 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  progressSection: {
+    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  progressLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  progressPercent: {
+    fontSize: isSmallDevice ? 16 : 18,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 4,
+  },
+  citaSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  citaIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  iconBoxCompletado: {
-    backgroundColor: 'rgba(34, 197, 94, 0.3)',
-    borderColor: 'rgba(34, 197, 94, 0.4)',
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 4,
-  },
-  cardDoctor: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.85)',
-  },
-  badgeCompletado: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(34, 197, 94, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(34, 197, 94, 0.5)',
-  },
-  progressSection: {
-    marginBottom: 14,
-  },
-  progressInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  progressLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.75)',
-  },
-  progressPercent: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 5,
-  },
-  progressCompletado: {
-    backgroundColor: 'rgba(34, 197, 94, 0.9)',
+    borderColor: colors.border,
   },
   citaInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 10,
+    flex: 1,
   },
-  citaText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.95)',
-    fontWeight: '500',
+  citaLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 3,
   },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+  citaFecha: {
+    fontSize: isSmallDevice ? 14 : 15,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  infoCard: {
+    backgroundColor: colors.card,
     borderRadius: 12,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    padding: isSmallDevice ? 14 : 16,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  actionButtonSecondary: {
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: isDark ? colors.backgroundSecondary : colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    gap: 8,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderBottomWidth: 3,
-    borderBottomColor: 'rgba(0, 0, 0, 0.4)',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  actionButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFF',
+  infoText: {
+    flex: 1,
+    fontSize: isSmallDevice ? 12 : 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
 });
