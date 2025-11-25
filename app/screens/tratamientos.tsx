@@ -40,8 +40,8 @@ export default function ExploreScreen() {
     nombre: 'Ortodoncia',
     descripcion: 'Tratamiento de alineación dental',
     icon: 'medkit',
-    progreso: 35,
-    proximaCita: '20 Nov 2024',
+    progreso: 45,
+    proximaCita: '15 Dic 2025',
   };
 
   const styles = createStyles(colors, isDark);
