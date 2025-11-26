@@ -26,6 +26,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import dentistImage from "../../assets/images/dentist.png";
 import logoImage from "../../assets/images/logo.png";
 import api from "../services/api";
+import { useGoogleAuth } from "../hooks/useGoogleAuth"; // NUEVO
+
 const { width, height } = Dimensions.get("window");
 const EMAIL_REGEX =
   /^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|live|uthh\.edu)\.(com|mx)$/;
@@ -35,6 +37,10 @@ export default function Login() {
   const auth = useContext(AuthContext);
   const theme = useContext(ThemeContext);
   const scrollViewRef = useRef<ScrollView>(null);
+  
+  // Hook de Google - NUEVO
+  const { signInWithGoogle, googleUser, loading: googleLoading } = useGoogleAuth();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,6 +70,13 @@ export default function Login() {
       keyboardWillHide.remove();
     };
   }, []);
+
+  // Detecta cuando Google retorna el usuario - NUEVO
+  useEffect(() => {
+    if (googleUser) {
+      authenticateWithBackend(googleUser);
+    }
+  }, [googleUser]);
 
   if (!auth || !theme) {
     return (
@@ -231,6 +244,47 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  // Autentica con Google en el backend - NUEVO
+  const authenticateWithBackend = async (user: any) => {
+    setLoading(true);
+    
+    try {
+      const response = await fetch(
+        "https://back-end-4803.onrender.com/api/users/loginGoogle",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user.email,
+            googleId: user.id,
+            name: user.name,
+            picture: user.picture,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const userData = {
+          id: data.user.id.toString(),
+          name: data.user.name || user.name,
+          email: data.user.email,
+        };
+
+        await auth?.login(data.user.id.toString(), userData);
+        router.replace("/(tabs)");
+      } else {
+        Alert.alert("Error", data.message || "Error al autenticar con Google");
+      }
+    } catch (error) {
+      Alert.alert("Error", "No se pudo conectar con el servidor");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const styles = createStyles(colors, keyboardVisible);
 
   return (
@@ -307,7 +361,7 @@ export default function Login() {
                           setEmail(text);
                           if (emailError) setEmailError("");
                         }}
-                        editable={!loading}
+                        editable={!loading && !googleLoading}
                       />
                     </View>
                     {emailError ? (
@@ -338,12 +392,12 @@ export default function Login() {
                           if (passwordError) setPasswordError("");
                         }}
                         onSubmitEditing={handleLogin}
-                        editable={!loading}
+                        editable={!loading && !googleLoading}
                       />
                       <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
                         style={styles.eyeIcon}
-                        disabled={loading}
+                        disabled={loading || googleLoading}
                       >
                         <Ionicons
                           name={
@@ -363,7 +417,7 @@ export default function Login() {
                     <TouchableOpacity
                       style={styles.checkboxContainer}
                       onPress={() => setRememberMe(!rememberMe)}
-                      disabled={loading}
+                      disabled={loading || googleLoading}
                       activeOpacity={0.7}
                     >
                       <Ionicons
@@ -376,7 +430,7 @@ export default function Login() {
 
                     <TouchableOpacity
                       onPress={handleForgotPassword}
-                      disabled={loading}
+                      disabled={loading || googleLoading}
                       activeOpacity={0.7}
                     >
                       <Text style={styles.forgotText}>
@@ -388,10 +442,10 @@ export default function Login() {
                   <TouchableOpacity
                     style={[
                       styles.loginButton,
-                      loading && styles.loginButtonDisabled,
+                      (loading || googleLoading) && styles.loginButtonDisabled,
                     ]}
                     onPress={handleLogin}
-                    disabled={loading}
+                    disabled={loading || googleLoading}
                     activeOpacity={0.7}
                   >
                     {loading ? (
@@ -401,13 +455,37 @@ export default function Login() {
                     )}
                   </TouchableOpacity>
 
+                  {/* Separador - NUEVO */}
+                  <View style={styles.dividerContainer}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>O continúa con</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+
+                  {/* Botón de Google - NUEVO */}
+                  <TouchableOpacity
+                    style={styles.googleButton}
+                    onPress={signInWithGoogle}
+                    disabled={loading || googleLoading}
+                    activeOpacity={0.7}
+                  >
+                    {googleLoading ? (
+                      <ActivityIndicator color={colors.primary} />
+                    ) : (
+                      <>
+                        <Ionicons name="logo-google" size={24} color={colors.primary} />
+                        <Text style={styles.googleButtonText}>Continuar con Google</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+
                   <View style={styles.registerContainer}>
                     <Text style={styles.registerQuestion}>
                       ¿No tienes cuenta?
                     </Text>
                     <TouchableOpacity
                       onPress={handleRegister}
-                      disabled={loading}
+                      disabled={loading || googleLoading}
                       activeOpacity={0.7}
                     >
                       <Text style={styles.registerLink}>Regístrate aquí</Text>
@@ -604,6 +682,40 @@ const createStyles = (colors: any, keyboardVisible: boolean) =>
       textAlign: "center",
       fontSize: 17,
       letterSpacing: 0.5,
+    },
+    // NUEVOS ESTILOS PARA GOOGLE
+    dividerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: keyboardVisible ? 16 : 20,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.border,
+    },
+    dividerText: {
+      color: colors.textSecondary,
+      paddingHorizontal: 12,
+      fontSize: 13,
+    },
+    googleButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.inputBg,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      paddingVertical: keyboardVisible ? 14 : 16,
+      borderRadius: 12,
+      width: "100%",
+      marginBottom: keyboardVisible ? 16 : 20,
+    },
+    googleButtonText: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '600',
+      marginLeft: 10,
     },
     registerContainer: {
       flexDirection: "row",
