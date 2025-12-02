@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { GOOGLE_CONFIG } from '../config/googleConfig';
+import { makeRedirectUri } from 'expo-auth-session';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -14,10 +15,17 @@ interface GoogleUser {
 }
 
 export const useGoogleAuth = () => {
+  // Forzar el uso de auth.expo.io
+  const redirectUri = makeRedirectUri({
+    scheme: 'Odontology',
+    path: 'redirect'
+  });
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: GOOGLE_CONFIG.webClientId,
     androidClientId: GOOGLE_CONFIG.androidClientId,
     iosClientId: GOOGLE_CONFIG.iosClientId,
+    redirectUri: 'https://auth.expo.io/@emmxrx/Odontology',
   });
 
   const [googleUser, setGoogleUser] = useState<GoogleUser | null>(null);

@@ -4,27 +4,28 @@
     "slug": "Odontology",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/logo.jpg",
     "scheme": "odontology",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.emmxrx.Odontology"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#2563EB",
-        "foregroundImage": "./assets/images/logo.png",
-        "backgroundImage": "./assets/images/logo.png",
-        "monochromeImage": "./assets/images/logo.png"
+        "foregroundImage": "./assets/images/logo.jpg",
+        "backgroundImage": "./assets/images/logo.jpg",
+        "monochromeImage": "./assets/images/logo.jpg"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.Odontology"
+      "package": "com.emmxrx.Odontology"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/logo.png"
+      "favicon": "./assets/images/logo.jpg"
     },
     "plugins": [
       "expo-router",
@@ -43,7 +44,9 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
+      "router": {
+        "origin": "https://auth.expo.io/@emmxrx/Odontology"
+      },
       "eas": {
         "projectId": "e6a875a0-52f6-4a0a-ac46-230f28c14b7c"
       }
